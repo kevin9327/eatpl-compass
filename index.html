@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="origin-when-cross-origin">
+<meta name="description" content="잇플나침반은 BC카드 결제 데이터 기반 eat.pl 잇플 맛집 탐색과 회식 모임 의사결정을 돕는 3D 미식 레이더 웹 애플리케이션입니다.">
+<title>잇플나침반 · BC카드 결제 데이터 기반 3D 미식 레이더 및 회식 모임 의사결정 에이전트</title>
+<style>
+/* Hallmark · Warm Editorial Culinary Atlas · Eat.pl Compass */
+:root {
+  --font-sans: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+  --bg-deep: #0b1118;
+  --bg-surface: #121b26;
+  --bg-elevated: #182534;
+  --bg-glass: rgba(18, 27, 38, 0.92);
+  --border-subtle: rgba(235, 185, 108, 0.28);
+  --border-strong: rgba(235, 185, 108, 0.65);
+  --border-cyan: rgba(84, 214, 198, 0.42);
+  --accent-gold: #ebb96c;
+  --accent-cyan: #54d6c6;
+  --accent-mint: #6be39b;
+  --text-primary: #f6f8fa;
+  --text-secondary: #c6d2df;
+}
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html, body {
+  min-height: 100%;
+  overflow-x: clip;
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
+}
+button:active,
+a:active {
+  transform: translateY(1px);
+}
+button:disabled,
+input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.page-shell {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.top-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+}
+.brand-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.brand-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+.brand-sub {
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+.nav-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.btn-eatpl-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: var(--accent-gold);
+  color: var(--bg-deep);
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.btn-roulette {
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: transparent;
+  border: 1.5px solid var(--accent-gold);
+  color: var(--accent-gold);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 24px;
+}
+@media (max-width: 960px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.radar-panel {
+  position: relative;
+  min-height: 420px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-cyan);
+  border-radius: 20px;
+  overflow: hidden;
+}
+#radar-canvas {
+  width: 100%;
+  height: 420px;
+  display: block;
+}
+.radar-overlay {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none;
+}
+.radar-caption {
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--bg-glass);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  max-width: 440px;
+}
+.radar-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--accent-gold);
+}
+.radar-desc {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.radar-stat-badge {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--bg-glass);
+  border: 1px solid var(--accent-cyan);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+.concierge-panel {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+}
+.panel-heading {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.panel-copy {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.search-box {
+  display: flex;
+  gap: 8px;
+}
+.search-input {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-size: 15px;
+}
+.search-btn {
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent-gold);
+  color: var(--bg-deep);
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.preset-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.preset-chip {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+}
+.spotlight-card {
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1.5px solid var(--accent-gold);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.spotlight-name {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--accent-gold);
+}
+.spotlight-meta {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.spotlight-link {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--accent-gold);
+  color: var(--bg-deep);
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.filter-bar {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.filter-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin-right: 8px;
+}
+.filter-btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-deep);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.filter-btn.active {
+  background: var(--accent-gold);
+  color: var(--bg-deep);
+  border-color: var(--accent-gold);
+  font-weight: 800;
+}
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+.merchant-card {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.card-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.card-cat {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-cyan);
+  color: var(--accent-cyan);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.rank-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.rank-pill {
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  color: var(--accent-gold);
+  font-size: 13px;
+  font-weight: 800;
+}
+.badge-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tag-badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--bg-deep);
+  color: var(--accent-mint);
+  font-size: 12px;
+  font-weight: 600;
+}
+.card-info {
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.card-cta {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--accent-gold);
+  color: var(--bg-deep);
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.table-section {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.table-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+th, td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+  vertical-align: middle;
+}
+th {
+  background: var(--bg-elevated);
+  color: var(--accent-gold);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.tbl-link {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: var(--accent-gold);
+  color: var(--bg-deep);
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.notice-footer {
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+.source-highlight {
+  color: var(--accent-gold);
+  font-weight: 800;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+<div class="page-shell">
+  <header class="top-nav">
+    <div class="brand-group">
+      <h1 class="brand-title">잇플나침반 (Eat.pl Compass)</h1>
+      <p class="brand-sub">최근 1개월 BC카드 결제 데이터 기반 전국 13대 상권 매출 상위 맛집 3D 레이더 및 모임 의사결정 웹앱</p>
+    </div>
+    <div class="nav-actions">
+      <button type="button" class="btn-roulette" id="btn-random-pick">오늘의 모임 맛집 3초 룰렛 픽</button>
+      <a class="btn-eatpl-home" href="https://web.paybooc.ai/place/eatpl-home" target="_blank" rel="noopener">eat.pl 잇플 홈 바로가기</a>
+    </div>
+  </header>
+
+  <section class="hero-grid" aria-label="3D 미식 매출 지형도 및 자연어 검색 컨시어지">
+    <div class="radar-panel">
+      <canvas id="radar-canvas" width="760" height="420" aria-label="전국 상권별 매출 상위 가맹점 3D 지형도 레이더"></canvas>
+      <div class="radar-overlay">
+        <div class="radar-caption">
+          <div class="radar-title">3D 결제 매출 백분위 지형도 레이더</div>
+          <p class="radar-desc">기둥이 높고 금빛에 가까울수록 최근 1개월 BC카드 전국 및 지역 매출 상위권 매장입니다.</p>
+        </div>
+        <div class="radar-stat-badge" id="radar-count-badge">분석 매장 224곳</div>
+      </div>
+    </div>
+
+    <div class="concierge-panel">
+      <div>
+        <h2 class="panel-heading">AI 맛집 컨시어지 및 회식 매칭</h2>
+        <p class="panel-copy">별점 광고 대신 실제 카드 결제 데이터 백분위와 시간대별 혼잡도, 주요 방문 연령층을 분석해 추천합니다.</p>
+      </div>
+      <div class="search-box">
+        <input type="search" id="query-input" class="search-input" placeholder="예: 을지로 회식 고기구이, 성수 동네 카페, 해운대 외국인" aria-label="지역, 업종, 상황으로 맛집 검색">
+        <button type="button" id="query-btn" class="search-btn">탐색</button>
+      </div>
+      <div class="preset-list">
+        <button type="button" class="preset-chip" data-q="을지로">을지로 직장인 점심·회식</button>
+        <button type="button" class="preset-chip" data-q="강남">강남 매출 상위권</button>
+        <button type="button" class="preset-chip" data-q="성수 카페">성수 동네 카페</button>
+        <button type="button" class="preset-chip" data-q="홍대">홍대·연남 핫플</button>
+        <button type="button" class="preset-chip" data-q="판교">판교 팀 회식</button>
+        <button type="button" class="preset-chip" data-q="해운대">부산 해운대 미식</button>
+      </div>
+      <div class="spotlight-card" id="spotlight-box">
+        <div class="spotlight-name" id="spot-name">추천 매장을 불러오는 중입니다</div>
+        <div class="spotlight-meta" id="spot-meta">상권과 조건을 선택하거나 3초 룰렛 버튼을 눌러 보세요.</div>
+        <a class="spotlight-link" id="spot-link" href="https://web.paybooc.ai/place/eatpl-home" target="_blank" rel="noopener">eat.pl 상세 페이지 열기</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="filter-bar" aria-label="상권 및 테마 조건 필터">
+    <div class="filter-row" id="hub-filters">
+      <span class="filter-label">상권 선택</span>
+    </div>
+    <div class="filter-row" id="theme-filters">
+      <span class="filter-label">맞춤 조건</span>
+      <button type="button" class="filter-btn active" data-theme="all">전체 보기</button>
+      <button type="button" class="filter-btn" data-theme="local">동네 맛집 인증</button>
+      <button type="button" class="filter-btn" data-theme="dinner">회식 적합 매장</button>
+      <button type="button" class="filter-btn" data-theme="foreign">외국인 방문 맛집</button>
+      <button type="button" class="filter-btn" data-theme="cafe">카페·디저트</button>
+      <button type="button" class="filter-btn" data-theme="meat">고기구이·한식</button>
+    </div>
+  </section>
+
+  <section aria-label="추천 가맹점 카드 목록">
+    <div class="cards-grid" id="cards-container"></div>
+  </section>
+
+  <section class="table-section" aria-label="BC카드 결제 데이터 기반 전체 비교표">
+    <div class="table-header">
+      <h2 class="panel-heading">상권별 가맹점 매출 상위 백분위 및 영업 예상 시간 비교표</h2>
+      <p class="panel-copy">최근 1개월 결제 승인 시각 기반 추정이므로 공식 영업시간이 아님</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>가맹점명</th>
+            <th>eat.pl 상세 링크</th>
+            <th>주소</th>
+            <th>업종</th>
+            <th>전국 매출 상위</th>
+            <th>지역 매출 상위</th>
+            <th>카카오맵 평점</th>
+            <th>동네 맛집</th>
+            <th>외국인 방문</th>
+            <th>회식 적합</th>
+            <th>영업 예상 시간</th>
+            <th>혼잡 요일/시간</th>
+            <th>주요 고객층</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="notice-footer">
+    <p class="source-highlight">출처 : eat.pl 잇플 · BC카드 결제 데이터 기반</p>
+    <p>안내 : 영업 예상 시간은 최근 1개월 결제 승인 시각 기반 추정이므로 공식 영업시간이 아닙니다. 방문 전 매장에 확인해 주시기 바랍니다.</p>
+    <p>고지 : 본 웹서비스(잇플나침반)는 eat.pl 잇플 수익화 챌린지 출품작으로 개발된 독립 서비스이며, BC카드 또는 eat.pl의 공식 서비스가 아닙니다. 가맹점 상세 보기 클릭 시 BC카드 페이북 eat.pl 공식 상세 페이지로 변형 없이 직접 연결됩니다.</p>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  const MERCHANTS = [{"n": "투썸플레이스 을지트윈타워점/투썸플레이스", "u": "https://web.paybooc.ai/mer/web/profile/eANnrkbAHY4G2Kkss8DFQ", "a": "서울 중구 을지로 170 ,1층 (을지로4가)", "c": "카페", "nr": 0.03, "cr": 0.11, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:59~22:55", "cg": "수요일 · 오전 (연중무휴)", "cst": "30대여성, 40대남성, 40대여성", "hub": "을지로·명동·광화문"}, {"n": "(주)반도명동", "u": "https://web.paybooc.ai/mer/web/profile/6TyO9ye1bc232ZWSmDMHA", "a": "서울 중구 명동3길 8 (명동1가)", "c": "고기구이", "nr": 0.13, "cr": 0.22, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:53~20:11", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 40대남성, 60대이상여성", "hub": "을지로·명동·광화문"}, {"n": "카페시나브로(을지트윈타워점)", "u": "https://web.paybooc.ai/mer/web/profile/bQSyX0QU5duyTaDXVqWW5A", "a": "서울 중구 을지로30길 20 지하1층 B112호", "c": "카페", "nr": 0.04, "cr": 0.23, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:45~19:09", "cg": "목요일 · 오전 (연중무휴)", "cst": "30대여성, 30대남성, 40대남성", "hub": "을지로·명동·광화문"}, {"n": "무교동북어국집", "u": "https://web.paybooc.ai/mer/web/profile/y1Aqy5wgJ5kbWNZVQLCA", "a": "서울 중구 을지로1길 38 (다동)", "c": "찜/탕/찌개", "nr": 0.05, "cr": 0.27, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:31~19:55", "cg": "금요일 · 점심 (휴무: 월)", "cst": "60대이상남성, 50대남성, 40대남성", "hub": "을지로·명동·광화문"}, {"n": "진주회관", "u": "https://web.paybooc.ai/mer/web/profile/KWTW72meLYWJReeFfeJg", "a": "서울 중구 세종대로11길 26 (서소문동)", "c": "백반/한정식", "nr": 0.02, "cr": 0.28, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:05~20:29", "cg": "금요일 · 점심 (휴무: 일)", "cst": "30대여성, 40대남성, 50대남성", "hub": "을지로·명동·광화문"}, {"n": "알비(RB)커피", "u": "https://web.paybooc.ai/mer/web/profile/lpCJf8vhELpLMtFMwrki9g", "a": "서울특별시 중구 을지로 지하 58 ,21,23호", "c": "기타한식", "nr": 0.25, "cr": 0.43, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:33~13:42", "cg": "화요일 · 오전 (휴무: 토,일)", "cst": "30대여성, 30대남성, 40대남성", "hub": "을지로·명동·광화문"}, {"n": "덕수궁 리에제 와플", "u": "https://web.paybooc.ai/mer/web/profile/Pysdm0JNUALNaUjU0c4CtQ", "a": "서울 중구 덕수궁길 5 (태평로2가)1층", "c": "카페", "nr": 0.19, "cr": 0.45, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:09~22:26", "cg": "토요일 · 저녁 (연중무휴)", "cst": "20대여성, 30대여성, 40대여성", "hub": "을지로·명동·광화문"}, {"n": "아모제푸드(주)솜씨", "u": "https://web.paybooc.ai/mer/web/profile/uX8oQaWV5vjOM2FbSJkS0A", "a": "서울 중구 남대문로5길 15 지하2층 (북창동)", "c": "기타외국식", "nr": 0.03, "cr": 0.45, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 11:35~21:29", "cg": "토요일 · 저녁 (휴무: 화,수)", "cst": "40대남성, 40대여성, 20대여성", "hub": "을지로·명동·광화문"}, {"n": "닭진미", "u": "https://web.paybooc.ai/mer/web/profile/oopjlGswkWmTapnNir8f2w", "a": "서울 중구 남대문시장길 22-20 (남창동)", "c": "고기구이", "nr": 0.19, "cr": 0.45, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:20~20:11", "cg": "토요일 · 점심 (휴무: 일)", "cst": "60대이상남성, 50대남성, 60대이상여성", "hub": "을지로·명동·광화문"}, {"n": "이북집", "u": "https://web.paybooc.ai/mer/web/profile/sdzLppJVC2wrbeLHgyiEQ", "a": "서울 중구 퇴계로 406-2 (신당동)", "c": "찜/탕/찌개", "nr": 0.57, "cr": 0.53, "kr": "미확인", "loc": true, "fr": false, "emp": true, "hrs": "영업 예상 시간 06:01~익일 05:58", "cg": "일요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 30대남성", "hub": "을지로·명동·광화문"}, {"n": "가메골 옛날손왕만두/가메골에프엔비 (주)", "u": "https://web.paybooc.ai/mer/web/profile/28k3iJHUYC4xd2jrxIiLA", "a": "서울 중구 남대문시장4길 42 (남창동)", "c": "국수/면/만두", "nr": 0.03, "cr": 0.53, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:58~19:56", "cg": "토요일 · 점심 (휴무: 일)", "cst": "30대여성, 40대여성, 60대이상여성", "hub": "을지로·명동·광화문"}, {"n": "주식회사 유림면", "u": "https://web.paybooc.ai/mer/web/profile/ijcM7NHItb88JoA9oCjnJQ", "a": "서울 중구 서소문로 139-1 (서소문동)", "c": "백반/한정식", "nr": 0.4, "cr": 0.57, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:59~19:40", "cg": "금요일 · 점심 (연중무휴)", "cst": "60대이상여성, 50대여성, 40대여성", "hub": "을지로·명동·광화문"}, {"n": "메가엠지씨커피 명동중앙점", "u": "https://web.paybooc.ai/mer/web/profile/lfUKEN3lvtYxMe9NS5EGGw", "a": "서울 중구 명동8가길 22 1층 (충무로2가)", "c": "카페", "nr": 0.19, "cr": 0.57, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:27~20:11", "cg": "금요일 · 오전 (연중무휴)", "cst": "20대여성, 30대남성, 30대여성", "hub": "을지로·명동·광화문"}, {"n": "란주칼면", "u": "https://web.paybooc.ai/mer/web/profile/yAvgoLgudOCo29N2zUOtUw", "a": "서울 중구 소공로 64 B동 1층 101호 (충무로1가,동남빌딩)", "c": "기타중식", "nr": 0.16, "cr": 0.66, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:53~21:24", "cg": "토요일 · 저녁 (연중무휴)", "cst": "20대여성, 30대여성, 30대남성", "hub": "을지로·명동·광화문"}, {"n": "달맞이 광장 바베큐", "u": "https://web.paybooc.ai/mer/web/profile/CygOCP9luORUqf8WvsCw", "a": "서울 중구 을지로 112-1 1층 (을지로3가)", "c": "고기구이", "nr": 0.22, "cr": 0.67, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 16:27~익일 01:45", "cg": "토요일 · 저녁 (연중무휴)", "cst": "20대여성, 30대남성, 30대여성", "hub": "을지로·명동·광화문"}, {"n": "컴포즈커피 기업은행본점", "u": "https://web.paybooc.ai/mer/web/profile/0cuAXfvGJunwoRlFzR2fA", "a": "서울 중구 을지로 79 19층 (을지로2가, 기업은행)", "c": "카페", "nr": 0.3, "cr": 0.68, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:24~14:49", "cg": "월요일 · 오전 (휴무: 토,일)", "cst": "30대남성, 40대남성, 50대남성", "hub": "을지로·명동·광화문"}, {"n": "이디야 IBK본점", "u": "https://web.paybooc.ai/mer/web/profile/2xq5T9P8dsWPD2FKbgrLqA", "a": "서울 중구 을지로 79 지하1층 (을지로2가)", "c": "카페", "nr": 0.41, "cr": 0.79, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:31~21:22", "cg": "목요일 · 오전 (연중무휴)", "cst": "30대남성, 40대남성, 30대여성", "hub": "을지로·명동·광화문"}, {"n": "가나안", "u": "https://web.paybooc.ai/mer/web/profile/0tMOzJnt6XeHPbRCLY6w", "a": "서울 중구 다산로 131 (신당동)", "c": "찜/탕/찌개", "nr": 0.72, "cr": 0.8, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:01~익일 05:58", "cg": "일요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 60대이상여성", "hub": "을지로·명동·광화문"}, {"n": "(주)포비아워스", "u": "https://web.paybooc.ai/mer/web/profile/vPu0nJ4YIQkWqdyjGfouw", "a": "서울 강남구 삼성로63길 21 (대치동, 자유빌딩)", "c": "카페", "nr": 0, "cr": 0.06, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:01~21:54", "cg": "금요일 · 점심 (연중무휴)", "cst": "30대여성, 40대여성, 30대남성", "hub": "강남·역삼·압구정"}, {"n": "(주)전한강강술래역삼점", "u": "https://web.paybooc.ai/mer/web/profile/KwSIc12L3tI3fHrkfwdg", "a": "서울 강남구 논현로 325 (역삼동)", "c": "고기구이", "nr": 0.1, "cr": 0.12, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 09:52~21:53", "cg": "목요일 · 점심 (연중무휴)", "cst": "60대이상여성, 60대이상남성, 50대남성", "hub": "강남·역삼·압구정"}, {"n": "주식회사 스프링가든", "u": "https://web.paybooc.ai/mer/web/profile/79K6JoKDFJx3mF5qZSw8w", "a": "서울 강남구 일원로 81 지하1층 (일원동, 삼성의료원)", "c": "카페", "nr": 0.04, "cr": 0.13, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:29~20:00", "cg": "화요일 · 오전 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대여성", "hub": "강남·역삼·압구정"}, {"n": "신의주찹쌀순대", "u": "https://web.paybooc.ai/mer/web/profile/CLnDL9JyBtPvFTxvq1gSBg", "a": "서울 강남구 양재대로27길 6 지상 1층 (일원동)", "c": "찜/탕/찌개", "nr": 0.62, "cr": 0.17, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:40~21:55", "cg": "일요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 40대남성", "hub": "강남·역삼·압구정"}, {"n": "(주)청담푸드빌", "u": "https://web.paybooc.ai/mer/web/profile/IzcfsElzM2RvmPaIKQJgsA", "a": "서울 강남구 영동대로 725 (청담동)", "c": "백반/한정식", "nr": 0.11, "cr": 0.18, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:03~익일 05:58", "cg": "금요일 · 점심 (연중무휴)", "cst": "40대남성, 60대이상남성, 50대남성", "hub": "강남·역삼·압구정"}, {"n": "엔제리너스 수서역사", "u": "https://web.paybooc.ai/mer/web/profile/sW43T2SwDt3BxLdqmxsA", "a": "서울 강남구 밤고개로 99 수서역사 (수서동)", "c": "카페", "nr": 0.04, "cr": 0.19, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:01~21:57", "cg": "토요일 · 오전 (연중무휴)", "cst": "50대남성, 60대이상남성, 30대여성", "hub": "강남·역삼·압구정"}, {"n": "신동궁감자탕뼈숯불구이", "u": "https://web.paybooc.ai/mer/web/profile/4T2dIUX8mtoxM6tKgOw", "a": "서울 강남구 선릉로86길 39 1층(대치동)", "c": "고기구이", "nr": 0.22, "cr": 0.25, "kr": "미확인", "loc": false, "fr": false, "emp": true, "hrs": "영업 예상 시간 06:01~익일 05:55", "cg": "금요일 · 점심 (연중무휴)", "cst": "30대남성, 40대남성, 30대여성", "hub": "강남·역삼·압구정"}, {"n": "(주)씨앤코컴퍼니", "u": "https://web.paybooc.ai/mer/web/profile/xO5svdIQbwEMGSa048YNnQ", "a": "서울 강남구 역삼로17길 60 ,3층 (역삼동,케이에스빌딩)", "c": "카페", "nr": 0.12, "cr": 0.25, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:36~19:23", "cg": "화요일 · 오전 (연중무휴)", "cst": "20대남성, 20대여성, 50대여성", "hub": "강남·역삼·압구정"}, {"n": "잠바주스 코엑스점", "u": "https://web.paybooc.ai/mer/web/profile/c7jRI4Uk7R0a1WkaFPqxRg", "a": "서울 강남구 영동대로 513 지하1층 K107호 (삼성동, 코엑스)", "c": "기타외국식", "nr": 0.44, "cr": 0.26, "kr": "미확인", "loc": false, "fr": true, "emp": false, "hrs": "영업 예상 시간 09:36~21:23", "cg": "토요일 · 오후 (연중무휴)", "cst": "30대여성, 20대여성, 30대남성", "hub": "강남·역삼·압구정"}, {"n": "강강술래 청담점", "u": "https://web.paybooc.ai/mer/web/profile/SvpS9AxhslzmBHnYiBGxg", "a": "서울 강남구 도산대로 535 1층 103호 2층 202호 용강빌딩 (청담동)", "c": "기타한식", "nr": 0.56, "cr": 0.32, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:00~익일 05:57", "cg": "금요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대남성", "hub": "강남·역삼·압구정"}, {"n": "투썸 2.0 강남", "u": "https://web.paybooc.ai/mer/web/profile/O17O6LihhUPrZ5KskNyuAw", "a": "서울 강남구 강남대로 468 지상 1층 (역삼동, 충림빌딩)", "c": "카페", "nr": 0.15, "cr": 0.32, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:58~익일 01:39", "cg": "토요일 · 저녁 (연중무휴)", "cst": "20대여성, 30대여성, 30대남성", "hub": "강남·역삼·압구정"}, {"n": "콩뿌리콩나물", "u": "https://web.paybooc.ai/mer/web/profile/rBt0nC6Ke40Hii8gRmE6jw", "a": "서울 강남구 논현로28길 41 1층 (도곡동)", "c": "찜/탕/찌개", "nr": 0.92, "cr": 0.34, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:01~익일 03:29", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 60대이상여성", "hub": "강남·역삼·압구정"}, {"n": "농민백암", "u": "https://web.paybooc.ai/mer/web/profile/7TSSVZhN3Bu1lJYCbaw", "a": "서울 강남구 선릉로86길 40-4 1층 (대치동)", "c": "백반/한정식", "nr": 0.46, "cr": 0.36, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:57~20:57", "cg": "월요일 · 점심 (휴무: 일)", "cst": "40대남성, 30대남성, 50대남성", "hub": "강남·역삼·압구정"}, {"n": "(주)에렉스", "u": "https://web.paybooc.ai/mer/web/profile/se5EJPFXx5W1XRM6XcfNTg", "a": "서울 강남구 삼성동 159 호텔오크우드프리미어내지하2층", "c": "기타중식", "nr": 0.06, "cr": 0.37, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:06~익일 01:09", "cg": "수요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 30대남성", "hub": "강남·역삼·압구정"}, {"n": "(주)삼원가든", "u": "https://web.paybooc.ai/mer/web/profile/Ond3lAH2yUPx5pbW4gPiA", "a": "서울 강남구 언주로 835 ,1층 (신사동)", "c": "고기구이", "nr": 0.22, "cr": 0.37, "kr": "미확인", "loc": false, "fr": true, "emp": false, "hrs": "영업 예상 시간 10:58~21:53", "cg": "금요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 40대남성", "hub": "강남·역삼·압구정"}, {"n": "평양냉면", "u": "https://web.paybooc.ai/mer/web/profile/nkJ7w5BbsmAEnrG3VSSaFw", "a": "서울 강남구 학동로 305-3 1층 (논현동,정각빌딩)", "c": "국수/면/만두", "nr": 0.08, "cr": 0.37, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 11:00~21:22", "cg": "토요일 · 저녁 (연중무휴)", "cst": "30대남성, 40대남성, 30대여성", "hub": "강남·역삼·압구정"}, {"n": "메가엠지씨커피 신논현역점", "u": "https://web.paybooc.ai/mer/web/profile/YuBuI7sdOHN7sBLtzysZw", "a": "서울 강남구 강남대로 480 1층 (논현동)", "c": "카페", "nr": 0.19, "cr": 0.38, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:31~22:21", "cg": "금요일 · 점심 (연중무휴)", "cst": "30대남성, 50대남성, 40대남성", "hub": "강남·역삼·압구정"}, {"n": "갓텐스시강남점", "u": "https://web.paybooc.ai/mer/web/profile/DznPuHwpdlChHHwIt27FA", "a": "서울 강남구 테헤란로 109 1층(역삼동, 강남제일빌딩)", "c": "스시/초밥", "nr": 0.67, "cr": 0.43, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 11:09~21:26", "cg": "금요일 · 저녁 (연중무휴)", "cst": "30대남성, 20대여성, 30대여성", "hub": "강남·역삼·압구정"}, {"n": "블루보틀커피코리아 유한회사", "u": "https://web.paybooc.ai/mer/web/profile/6MxNNKI5JGJcD5cU0MvJA", "a": "서울 성동구 아차산로 7 (성수동1가)", "c": "카페", "nr": 0, "cr": 0.16, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:38~22:01", "cg": "토요일 · 점심 (연중무휴)", "cst": "30대여성, 30대남성, 40대여성", "hub": "성수·서울숲·왕십리"}, {"n": "주식회사 독스타씨앤씨", "u": "https://web.paybooc.ai/mer/web/profile/zK8ueONs5OzHr2sVlAO2Cw", "a": "서울 성동구 왕십리광장로 17 4층 (행당동)", "c": "고기구이", "nr": 0.41, "cr": 0.31, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:55~20:16", "cg": "일요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대여성", "hub": "성수·서울숲·왕십리"}, {"n": "(주)성수동대림창고갤러리", "u": "https://web.paybooc.ai/mer/web/profile/sUTzCl6JML26p4oLps4SQ", "a": "서울 성동구 성수이로 78 (성수동2가)", "c": "카페", "nr": 0.23, "cr": 0.32, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:33~23:47", "cg": "토요일 · 오후 (연중무휴)", "cst": "20대여성, 40대여성, 30대여성", "hub": "성수·서울숲·왕십리"}, {"n": "소문난성수감자탕(주)", "u": "https://web.paybooc.ai/mer/web/profile/i6krbdMiiK1UyEUSaBn8w", "a": "서울 성동구 연무장길 45 1층 (성수동2가)", "c": "찜/탕/찌개", "nr": 0.27, "cr": 0.46, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:01~익일 05:58", "cg": "토요일 · 저녁 (연중무휴)", "cst": "50대남성, 40대남성, 30대남성", "hub": "성수·서울숲·왕십리"}, {"n": "메가엠지씨커피 옥수역점", "u": "https://web.paybooc.ai/mer/web/profile/aEcSfoIvKxtNyDHu1Sffjg", "a": "서울 성동구 한림말5길 9 ,1층 (옥수동, 유림빌딩)", "c": "카페", "nr": 0.4, "cr": 0.48, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:30~20:55", "cg": "토요일 · 점심 (연중무휴)", "cst": "30대남성, 60대이상남성, 30대여성", "hub": "성수·서울숲·왕십리"}, {"n": "주식회사 밥플러스", "u": "https://web.paybooc.ai/mer/web/profile/LYQfjmEonQX8wM51qx7K3A", "a": "서울 성동구 성수일로8길 5 ,101호 (성수동2가)", "c": "백반/한정식", "nr": 0.19, "cr": 0.58, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:49~14:17", "cg": "월요일 · 점심 (휴무: 토,일)", "cst": "40대남성, 20대남성, 30대남성", "hub": "성수·서울숲·왕십리"}, {"n": "갈랭", "u": "https://web.paybooc.ai/mer/web/profile/V6ZPMRGM8Hxh3BagwybhgQ", "a": "서울 성동구 성수이로 51 107A,B호 (성수동2가)", "c": "고기구이", "nr": 0.58, "cr": 0.61, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 09:33~19:33", "cg": "금요일 · 점심 (휴무: 일)", "cst": "30대남성, 20대남성, 40대남성", "hub": "성수·서울숲·왕십리"}, {"n": "투썸플레이스 서울숲역점", "u": "https://web.paybooc.ai/mer/web/profile/rCbS4d0GUgdJbLy4YQ8qZw", "a": "서울 성동구 왕십리로 58 1,2층 101,201호(성수동1가, FORHU)", "c": "카페", "nr": 0.47, "cr": 0.64, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:06~22:36", "cg": "금요일 · 점심 (연중무휴)", "cst": "20대여성, 30대여성, 40대남성", "hub": "성수·서울숲·왕십리"}, {"n": "보사노바 성수점", "u": "https://web.paybooc.ai/mer/web/profile/73DGRFA1dhdAvFfjx5JYXg", "a": "서울 성동구 아차산로 12 1층 (성수동1가, 한국방송통신대학교서울지역대학)", "c": "기타외국식", "nr": 1.05, "cr": 0.72, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:56~21:51", "cg": "일요일 · 점심 (연중무휴)", "cst": "30대여성, 20대여성, 40대여성", "hub": "성수·서울숲·왕십리"}, {"n": "훼미리손칼국수.보쌈", "u": "https://web.paybooc.ai/mer/web/profile/pHrbC9FhJlggjclzHn8A", "a": "서울 성동구 왕십리로 134 (성수동1가)", "c": "국수/면/만두", "nr": 1.59, "cr": 0.77, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 11:18~21:30", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 30대남성", "hub": "성수·서울숲·왕십리"}, {"n": "디엠에스플래닛", "u": "https://web.paybooc.ai/mer/web/profile/wtDVH82KXLecDjDRc0MvMg", "a": "서울 성동구 성수이로14길 14 (성수동2가)", "c": "기타한식", "nr": 0.84, "cr": 0.79, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 09:29~20:59", "cg": "토요일 · 오후 (연중무휴)", "cst": "20대여성, 30대여성, 20대남성", "hub": "성수·서울숲·왕십리"}, {"n": "깐부치킨(성수동갤러리아포레점)", "u": "https://web.paybooc.ai/mer/web/profile/woAbd2HJ2Ja1qRfrghOUPA", "a": "서울 성동구 서울숲2길 32-14 104호 (성수동1가)", "c": "치킨", "nr": 1.17, "cr": 0.81, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 11:29~23:02", "cg": "토요일 · 저녁 (연중무휴)", "cst": "40대남성, 60대이상여성, 30대남성", "hub": "성수·서울숲·왕십리"}, {"n": "로우커피스탠드", "u": "https://web.paybooc.ai/mer/web/profile/yyZdSLinnYr8XTjR5XG0EA", "a": "서울 성동구 연무장길 94 ,1층 (성수동2가)", "c": "카페", "nr": 0.52, "cr": 0.81, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:57~16:38", "cg": "금요일 · 점심 (연중무휴)", "cst": "30대여성, 30대남성, 20대여성", "hub": "성수·서울숲·왕십리"}, {"n": "화로구이(마장점)", "u": "https://web.paybooc.ai/mer/web/profile/tfCDMNxqSoaq8SsTnxZkqA", "a": "서울 성동구 마장로 315 C동 1층 지하1,1층,2층(마장동, 마장가든)", "c": "고기구이", "nr": 0.59, "cr": 0.92, "kr": "미확인", "loc": false, "fr": false, "emp": true, "hrs": "영업 예상 시간 06:15~익일 05:45", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대남성", "hub": "성수·서울숲·왕십리"}, {"n": "육전국밥 성수역점", "u": "https://web.paybooc.ai/mer/web/profile/frVBRa5Dg5Pg4BJciwcNhA", "a": "서울 성동구 아차산로 88 1층 (성수동2가)", "c": "찜/탕/찌개", "nr": 0.94, "cr": 0.93, "kr": "미확인", "loc": false, "fr": true, "emp": true, "hrs": "영업 예상 시간 06:00~익일 05:50", "cg": "금요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 20대남성", "hub": "성수·서울숲·왕십리"}, {"n": "메가엠지씨커피 한양대역점", "u": "https://web.paybooc.ai/mer/web/profile/lw1P55pjnZOwyGNyngJgVg", "a": "서울 성동구 왕십리로 206 209-005호 (행당동,한양대역)", "c": "카페", "nr": 0.53, "cr": 0.97, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:00~19:27", "cg": "화요일 · 오전 (연중무휴)", "cst": "20대남성, 20대여성, 30대남성", "hub": "성수·서울숲·왕십리"}, {"n": "이티에프 베이커리 성수(etf베이커리성수)", "u": "https://web.paybooc.ai/mer/web/profile/wrbzM3ICaujGXuD6dy20tA", "a": "서울 성동구 성수이로16길 32 주3 1,2층 (성수동2가, (주)MG전자)", "c": "카페", "nr": 0.61, "cr": 1.13, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:31~20:06", "cg": "금요일 · 점심 (연중무휴)", "cst": "20대여성, 40대여성, 30대여성", "hub": "성수·서울숲·왕십리"}, {"n": "요리왕", "u": "https://web.paybooc.ai/mer/web/profile/NRGARCdzTickarw8o5o9Kg", "a": "서울 성동구 연무장길 120 1층 (성수동2가)", "c": "기타중식", "nr": 0.46, "cr": 1.14, "kr": "미확인", "loc": false, "fr": false, "emp": true, "hrs": "영업 예상 시간 06:03~익일 05:59", "cg": "금요일 · 점심 (연중무휴)", "cst": "50대남성, 60대이상남성, 40대남성", "hub": "성수·서울숲·왕십리"}, {"n": "투썸플레이스상암우리센/투썸플레이스 주식", "u": "https://web.paybooc.ai/mer/web/profile/qtlqyrshxPemdX6qG6Q", "a": "서울 마포구 월드컵북로60길 17 1층(상암동, 우리금융상암센터)", "c": "카페", "nr": 0.07, "cr": 0.07, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:54~22:53", "cg": "금요일 · 오전 (연중무휴)", "cst": "40대여성, 30대남성, 40대남성", "hub": "홍대·연남·합정"}, {"n": "투썸플레이스 마포대로점", "u": "https://web.paybooc.ai/mer/web/profile/HBtaZWz7qdAWS9LbbCb9A", "a": "서울 마포구 마포대로 67 1층 (도화동)", "c": "카페", "nr": 0.17, "cr": 0.14, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:02~23:51", "cg": "금요일 · 점심 (연중무휴)", "cst": "20대여성, 50대여성, 30대여성", "hub": "홍대·연남·합정"}, {"n": "주식회사 뺑스톡", "u": "https://web.paybooc.ai/mer/web/profile/qEY6lkCUMSevzU0vp6Z2BQ", "a": "서울 마포구 백범로31길 7 상가 2동 113호 (공덕동)", "c": "고기구이", "nr": 0.02, "cr": 0.18, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:47~22:57", "cg": "금요일 · 저녁 (연중무휴)", "cst": "20대여성, 30대여성, 40대여성", "hub": "홍대·연남·합정"}, {"n": "메가엠지씨커피 홍대입구역점", "u": "https://web.paybooc.ai/mer/web/profile/EVTGfIG2so4YHJdNQGoDAQ", "a": "서울 마포구 홍익로6길 48 1층 일부 (동교동)", "c": "카페", "nr": 0.21, "cr": 0.21, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:29~22:13", "cg": "금요일 · 점심 (연중무휴)", "cst": "20대여성, 20대남성, 30대남성", "hub": "홍대·연남·합정"}, {"n": "고망고 연남점", "u": "https://web.paybooc.ai/mer/web/profile/teJZ8jLmI3Ck6Ctdaqi8BA", "a": "서울 마포구 양화로21길 15 1층 일부 (동교동)", "c": "기타외국식", "nr": 0.36, "cr": 0.28, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 11:03~22:03", "cg": "토요일 · 저녁 (연중무휴)", "cst": "20대여성, 30대여성, 20대남성", "hub": "홍대·연남·합정"}, {"n": "투썸플레이스 상암MBC점", "u": "https://web.paybooc.ai/mer/web/profile/HvqBCiZ9emMAsUldBK3RQ", "a": "서울 마포구 성암로 267 ,1층(상암동)", "c": "카페", "nr": 0.24, "cr": 0.28, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:55~22:48", "cg": "목요일 · 오전 (연중무휴)", "cst": "20대여성, 30대여성, 40대여성", "hub": "홍대·연남·합정"}, {"n": "마포양지설렁탕/(주)양지식품", "u": "https://web.paybooc.ai/mer/web/profile/BBJiyG41iJ3fakm9kRCjVg", "a": "서울 마포구 새창로 6 (도화동,181-38,181-39)", "c": "찜/탕/찌개", "nr": 0.17, "cr": 0.28, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:24~21:04", "cg": "일요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 60대이상여성", "hub": "홍대·연남·합정"}, {"n": "감나무집기사식당", "u": "https://web.paybooc.ai/mer/web/profile/f8brEuLRaRQgJsWHuhuMAA", "a": "서울특별시 마포구 연남로 23 ,1층 전체 (연남동)", "c": "백반/한정식", "nr": 0.08, "cr": 0.29, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:01~익일 05:59", "cg": "금요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 30대남성", "hub": "홍대·연남·합정"}, {"n": "메가엠지씨커피 홍대패션거리점", "u": "https://web.paybooc.ai/mer/web/profile/OhF6zyFUW4Xok3isnw7Trw", "a": "서울 마포구 와우산로23길 38 1층 우측호 (서교동)", "c": "고기구이", "nr": 0.23, "cr": 0.36, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:00~21:44", "cg": "토요일 · 점심 (연중무휴)", "cst": "20대남성, 20대여성, 50대남성", "hub": "홍대·연남·합정"}, {"n": "나루토", "u": "https://web.paybooc.ai/mer/web/profile/Exhmy3Sl6Yzp0bLoJLw3w", "a": "서울 마포구 독막로9길 26 지1층(서교동)", "c": "기타일식", "nr": 0.64, "cr": 0.42, "kr": "미확인", "loc": false, "fr": true, "emp": false, "hrs": "영업 예상 시간 16:58~익일 00:56", "cg": "토요일 · 저녁 (연중무휴)", "cst": "30대남성, 20대여성, 20대남성", "hub": "홍대·연남·합정"}, {"n": "메가엠지씨커피마포시민공원점", "u": "https://web.paybooc.ai/mer/web/profile/H0PcXYWt0d5qzdXqf1SmZA", "a": "서울 마포구 망원로 19 1층 102호 (망원동, 참존아파트)", "c": "카페", "nr": 0.39, "cr": 0.42, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:01~22:26", "cg": "토요일 · 오전 (연중무휴)", "cst": "50대남성, 40대남성, 30대남성", "hub": "홍대·연남·합정"}, {"n": "을밀대", "u": "https://web.paybooc.ai/mer/web/profile/7MTfTN1HaTIkxLIZOjQew", "a": "서울 마포구 숭문길 22-3 (염리동,1층,147-5,147-6,147-7)", "c": "기타한식", "nr": 0.4, "cr": 0.47, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 11:12~21:52", "cg": "토요일 · 점심 (연중무휴)", "cst": "30대남성, 60대이상남성, 50대남성", "hub": "홍대·연남·합정"}, {"n": "메가커피공덕SK리더스뷰", "u": "https://web.paybooc.ai/mer/web/profile/a9q7kwLWJ5alUQaCBeKsbg", "a": "서울 마포구 백범로31길 8 , 1동 지하1층 8105호 (공덕동, 공덕SK리더스뷰)", "c": "카페", "nr": 0.44, "cr": 0.49, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:28~21:52", "cg": "금요일 · 점심 (연중무휴)", "cst": "30대남성, 50대남성, 20대여성", "hub": "홍대·연남·합정"}, {"n": "망원동즉석우동", "u": "https://web.paybooc.ai/mer/web/profile/uEVWZNNtkWzaK0tDGC0Zg", "a": "서울 마포구 동교로 83 ,1층 지하1층 (망원동)", "c": "국수/면/만두", "nr": 0.51, "cr": 0.5, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:59~21:16", "cg": "토요일 · 저녁 (휴무: 일)", "cst": "30대여성, 30대남성, 50대남성", "hub": "홍대·연남·합정"}, {"n": "주식회사 비1(B1 lnc.)", "u": "https://web.paybooc.ai/mer/web/profile/A8r8xOoP3e40UpUjOTFpw", "a": "서울 마포구 와우산로17길 6 지하1층 (서교동)", "c": "호프", "nr": 0.03, "cr": 0.5, "kr": "미확인", "loc": false, "fr": false, "emp": true, "hrs": "영업 예상 시간 06:00~익일 05:59", "cg": "토요일 · 새벽 (연중무휴)", "cst": "20대남성, 30대남성, 20대여성", "hub": "홍대·연남·합정"}, {"n": "가원", "u": "https://web.paybooc.ai/mer/web/profile/Fi3eSGXG6umtU6LnKTQvZw", "a": "서울 마포구 동교로 227-1 1,2층(연남동)", "c": "기타중식", "nr": 0.6, "cr": 0.54, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 11:08~21:12", "cg": "토요일 · 점심 (연중무휴)", "cst": "40대남성, 30대남성, 50대남성", "hub": "홍대·연남·합정"}, {"n": "큐스", "u": "https://web.paybooc.ai/mer/web/profile/noGLag6pNFFFnxOAx4Xlw", "a": "서울 마포구 망원로8길 27 101호 (망원동)", "c": "치킨", "nr": 0.04, "cr": 0.54, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:56~20:46", "cg": "토요일 · 오후 (연중무휴)", "cst": "20대여성, 30대여성, 50대여성", "hub": "홍대·연남·합정"}, {"n": "케이가드 주식회사", "u": "https://web.paybooc.ai/mer/web/profile/ZmT8YDfsqQk4OH7XmIvWYQ", "a": "서울 마포구 성산로2길 21 1층 (성산동)", "c": "고기구이", "nr": 0.29, "cr": 0.55, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:27~20:01", "cg": "일요일 · 점심 (연중무휴)", "cst": "50대남성, 60대이상남성, 40대남성", "hub": "홍대·연남·합정"}, {"n": "주식회사 풍전에프앤비", "u": "https://web.paybooc.ai/mer/web/profile/gWATeSAyCCR0Cl3CiEMtkQ", "a": "서울 영등포구 양평로21다길 22 ,8층 (양평동5가,지상8,9층,지하1층2호,3호)", "c": "카페", "nr": 0.01, "cr": 0.1, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:37~23:07", "cg": "화요일 · 점심 (연중무휴)", "cst": "20대여성, 20대남성, 50대남성", "hub": "여의도·문래"}, {"n": "주식회사 수연리테일", "u": "https://web.paybooc.ai/mer/web/profile/JNzEtFpONSUAxmCcSb7fA", "a": "서울 영등포구 선유동1로 50 제지하1층 비01호, 비02호(당산동3가)", "c": "고기구이", "nr": 0.09, "cr": 0.18, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:14~익일 01:49", "cg": "토요일 · 저녁 (연중무휴)", "cst": "20대남성, 20대여성, 40대여성", "hub": "여의도·문래"}, {"n": "또순이집", "u": "https://web.paybooc.ai/mer/web/profile/ysssVNqvGs74d9YyNLTw", "a": "서울 영등포구 선유로47길 16 (양평동4가)", "c": "찜/탕/찌개", "nr": 0.29, "cr": 0.2, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:47~21:07", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 40대남성", "hub": "여의도·문래"}, {"n": "보헤미안박이추커피/(사)한국방송공사공제회", "u": "https://web.paybooc.ai/mer/web/profile/GvNCsc7nDQmPil16lZIwg", "a": "서울 영등포구 여의공원로 13 (여의도동,한국방송공사)", "c": "카페", "nr": 0.02, "cr": 0.21, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:59~19:42", "cg": "금요일 · 점심 (휴무: 일)", "cst": "30대여성, 40대여성, 20대여성", "hub": "여의도·문래"}, {"n": "진주식당", "u": "https://web.paybooc.ai/mer/web/profile/pcoX31BK9TV79Ba8PsHv3g", "a": "서울 영등포구 국제금융로6길 33 지하1층 6호(여의도동, 맨하탄빌딩)", "c": "백반/한정식", "nr": 0.07, "cr": 0.24, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 09:52~20:09", "cg": "토요일 · 점심 (휴무: 일)", "cst": "30대여성, 30대남성, 40대남성", "hub": "여의도·문래"}, {"n": "백미당 타임스퀘어점", "u": "https://web.paybooc.ai/mer/web/profile/TtHMp7nRNrAF1fAwa1Y76A", "a": "서울 영등포구 영중로 15 지하1층 (영등포동4가, 타임스퀘어)", "c": "카페", "nr": 0.05, "cr": 0.31, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:34~21:51", "cg": "토요일 · 저녁 (연중무휴)", "cst": "30대여성, 40대여성, 20대여성", "hub": "여의도·문래"}, {"n": "판다익스프레스 여의도 IFC몰", "u": "https://web.paybooc.ai/mer/web/profile/rGgzr4c02oO79AJfRpiQJw", "a": "서울 영등포구 국제금융로 10 지하3층 316호 (여의도동, 서울국제금융센터)", "c": "기타중식", "nr": 0.07, "cr": 0.33, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:13~21:42", "cg": "토요일 · 점심 (연중무휴)", "cst": "30대남성, 20대여성, 20대남성", "hub": "여의도·문래"}, {"n": "(주)솟대촌 강강술래 당산점", "u": "https://web.paybooc.ai/mer/web/profile/EoApqUgKml1P7YU4eBatw", "a": "서울 영등포구 선유로 251 (양평동4가,삼성디지털프라자)", "c": "고기구이", "nr": 0.15, "cr": 0.36, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 09:59~21:31", "cg": "금요일 · 점심 (연중무휴)", "cst": "60대이상여성, 60대이상남성, 50대여성", "hub": "여의도·문래"}, {"n": "3일한우국밥", "u": "https://web.paybooc.ai/mer/web/profile/2YwCseNCiIlPqIGpYX1n4w", "a": "서울 영등포구 영등포로 204 (영등포동4가)", "c": "찜/탕/찌개", "nr": 0.48, "cr": 0.4, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:09~익일 05:59", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 30대남성, 50대남성", "hub": "여의도·문래"}, {"n": "마포만두", "u": "https://web.paybooc.ai/mer/web/profile/ZHPEow9poHUVpiKzp2lQ", "a": "서울 영등포구 여의도동 26 S-Trenue 103-2호", "c": "국수/면/만두", "nr": 0.43, "cr": 0.41, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:00~익일 05:59", "cg": "금요일 · 점심 (연중무휴)", "cst": "50대남성, 40대남성, 30대남성", "hub": "여의도·문래"}, {"n": "일반한식점(구)_NICE_A", "u": "https://web.paybooc.ai/mer/web/profile/Hf1ssdHN6KA5zc5hDf1lg", "a": "서울 영등포구 문래로28길 25 세미콜론문래 9층 N동 (문래동3가)", "c": "기타한식", "nr": 0.09, "cr": 0.41, "kr": "미확인", "loc": false, "fr": false, "emp": true, "hrs": "영업 예상 시간 06:04~익일 05:59", "cg": "금요일 · 저녁 (연중무휴)", "cst": "50대남성, 60대이상남성, 40대남성", "hub": "여의도·문래"}, {"n": "투썸플레이스여의도점/투썸플레이스 주식회", "u": "https://web.paybooc.ai/mer/web/profile/WZREGHhhbKDkOTKyApdw", "a": "서울 영등포구 여의도동 37아일렉스상가107.108.121.206.207호", "c": "카페", "nr": 0.15, "cr": 0.41, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:58~23:58", "cg": "금요일 · 점심 (연중무휴)", "cst": "20대여성, 30대여성, 50대남성", "hub": "여의도·문래"}, {"n": "주식회사아리수만찬", "u": "https://web.paybooc.ai/mer/web/profile/qpREv3gGO4cQvufQCK0zQ", "a": "서울 영등포구 노들로 111 (양화동,양화유람선선착장)", "c": "백반/한정식", "nr": 0.09, "cr": 0.47, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 11:00~익일 01:46", "cg": "토요일 · 저녁 (연중무휴)", "cst": "30대남성, 40대남성, 30대여성", "hub": "여의도·문래"}, {"n": "브루다 한국노총", "u": "https://web.paybooc.ai/mer/web/profile/9ISFX6aIdchMKmAUGeDAXw", "a": "서울 영등포구 국제금융로6길 26 ,1층 (여의도동,한국노총)", "c": "카페", "nr": 0.18, "cr": 0.51, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:30~17:49", "cg": "수요일 · 점심 (연중무휴)", "cst": "30대남성, 40대남성, 50대남성", "hub": "여의도·문래"}, {"n": "문래돼지불백", "u": "https://web.paybooc.ai/mer/web/profile/bHKgozM5GdqnzkKCDT6Kg", "a": "서울 영등포구 당산로 2-1 (문래동3가)", "c": "고기구이", "nr": 0.44, "cr": 0.54, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:03~20:55", "cg": "금요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 30대남성", "hub": "여의도·문래"}, {"n": "케이에프씨당산역점", "u": "https://web.paybooc.ai/mer/web/profile/sz5z6NnMZGqpK6nkShpviA", "a": "서울특별시 영등포구 양평로 46 ,1층,2층", "c": "치킨", "nr": 0.01, "cr": 0.54, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:00~23:50", "cg": "금요일 · 저녁 (연중무휴)", "cst": "30대남성, 20대남성, 40대남성", "hub": "여의도·문래"}, {"n": "원조호수삼계탕", "u": "https://web.paybooc.ai/mer/web/profile/s1PwORvufGFjB6p9XO4Q", "a": "서울 영등포구 도림로 274-1 (신길동)", "c": "찜/탕/찌개", "nr": 0.55, "cr": 0.6, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:58~21:16", "cg": "일요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 60대이상여성", "hub": "여의도·문래"}, {"n": "(주)현대그린푸드 현대백화점 더현대서울", "u": "https://web.paybooc.ai/mer/web/profile/qMAUhYAQSR4EfbWmb6vQWw", "a": "서울 영등포구 여의대로 108 지하2층 카페 (여의도동)", "c": "카페", "nr": 0.2, "cr": 0.62, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 09:29~익일 01:40", "cg": "일요일 · 점심 (연중무휴)", "cst": "20대여성, 30대남성, 20대남성", "hub": "여의도·문래"}, {"n": "아모제푸드(주) 잠실야구장", "u": "https://web.paybooc.ai/mer/web/profile/WeujtJt1593A4ApfmsBBg", "a": "서울 송파구 잠실동 10-1 잠실야구장외 1층", "c": "카페", "nr": 0, "cr": 0.1, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 12:05~22:57", "cg": "월요일 · 저녁 (휴무: 목,금,토)", "cst": "20대여성, 30대여성, 40대남성", "hub": "잠실·송리단길"}, {"n": "주식회사 정담은", "u": "https://web.paybooc.ai/mer/web/profile/cODdE7pZEq61Z9iv6ktVw", "a": "서울 송파구 위례성대로22길 18 1층 (오금동,이시돌빌딩)", "c": "고기구이", "nr": 0.17, "cr": 0.18, "kr": "미확인", "loc": true, "fr": true, "emp": false, "hrs": "영업 예상 시간 08:58~20:46", "cg": "금요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대여성", "hub": "잠실·송리단길"}, {"n": "메가엠지씨커피 송파구청점", "u": "https://web.paybooc.ai/mer/web/profile/1erLdPrqrxFH6OIsmhfSQ", "a": "서울 송파구 오금로 99 1,2층 진넥스레이크뷰 (방이동)", "c": "카페", "nr": 0.08, "cr": 0.2, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:00~22:53", "cg": "금요일 · 점심 (연중무휴)", "cst": "20대남성, 30대남성, 20대여성", "hub": "잠실·송리단길"}, {"n": "(주)함경도찹쌀순대", "u": "https://web.paybooc.ai/mer/web/profile/JlVnL9WlTIuc2HR1XBgMyQ", "a": "서울 송파구 송파대로28길 32 (가락동,현진오피스텔101~103,105-1)", "c": "찜/탕/찌개", "nr": 0.01, "cr": 0.25, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:00~익일 05:58", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 40대남성", "hub": "잠실·송리단길"}, {"n": "(주)청와옥푸드", "u": "https://web.paybooc.ai/mer/web/profile/piri3cZf5e0yL7z31CuA", "a": "서울 송파구 삼학사로 96 , 1층(석촌동)", "c": "백반/한정식", "nr": 0.13, "cr": 0.31, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:58~21:43", "cg": "토요일 · 저녁 (연중무휴)", "cst": "40대남성, 30대남성, 60대이상남성", "hub": "잠실·송리단길"}, {"n": "투썸플레이스 올림픽공원역점", "u": "https://web.paybooc.ai/mer/web/profile/gKolXgSen1s3ATXvJoXQrA", "a": "서울 송파구 올림픽로 424 만남의광장 A-3동 B구역 (방이동)", "c": "카페", "nr": 0.24, "cr": 0.31, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 09:02~21:47", "cg": "일요일 · 점심 (연중무휴)", "cst": "20대여성, 30대여성, 60대이상남성", "hub": "잠실·송리단길"}, {"n": "(주)벽제", "u": "https://web.paybooc.ai/mer/web/profile/4DAEHGt9xTrZWNcF3nJuw", "a": "서울 송파구 양재대로71길 1-4 (방이동)", "c": "고기구이", "nr": 0.17, "cr": 0.37, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 09:48~21:48", "cg": "일요일 · 저녁 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 40대남성", "hub": "잠실·송리단길"}, {"n": "마루가메우동 잠실롯데월드몰점", "u": "https://web.paybooc.ai/mer/web/profile/PdVspRIsULJ74eBvw2XMtA", "a": "서울 송파구 올림픽로 300 5층 (신천동, 롯데월드타워앤드롯데월드몰)", "c": "국수/면/만두", "nr": 0.24, "cr": 0.4, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:33~21:04", "cg": "토요일 · 저녁 (연중무휴)", "cst": "20대여성, 20대남성, 30대여성", "hub": "잠실·송리단길"}, {"n": "비비큐(BBQ) 빌리지 송리단길점", "u": "https://web.paybooc.ai/mer/web/profile/wGCRgoJeeIeJCwdRO1ePA", "a": "서울 송파구 석촌호수로 284 1층 102호~108호(송파동, 현대레이크빌)", "c": "치킨", "nr": 0.12, "cr": 0.41, "kr": "미확인", "loc": false, "fr": true, "emp": false, "hrs": "영업 예상 시간 10:01~익일 05:41", "cg": "토요일 · 저녁 (연중무휴)", "cst": "30대남성, 20대남성, 20대여성", "hub": "잠실·송리단길"}, {"n": "주식회사 리히크", "u": "https://web.paybooc.ai/mer/web/profile/zXJqGzhpkarJbgll5Hjkw", "a": "서울 송파구 올림픽로8길 11 1층 (잠실동, 이루안빌딩)", "c": "카페", "nr": 0.32, "cr": 0.41, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:04~21:56", "cg": "금요일 · 점심 (연중무휴)", "cst": "50대남성, 60대이상남성, 40대남성", "hub": "잠실·송리단길"}, {"n": "본가설렁탕", "u": "https://web.paybooc.ai/mer/web/profile/rZK6csr1AggG0CQ7rbcEQ", "a": "서울 송파구 석촌호수로 204 (석촌동)", "c": "찜/탕/찌개", "nr": 0.16, "cr": 0.49, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:29~22:03", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 60대이상여성", "hub": "잠실·송리단길"}, {"n": "성수옥", "u": "https://web.paybooc.ai/mer/web/profile/NgoULY4E4ujJAA2a2ne6sg", "a": "서울 송파구 위례성대로 180 1층 (오금동)", "c": "기타한식", "nr": 0.24, "cr": 0.5, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:51~14:28", "cg": "월요일 · 점심 (휴무: 토,일)", "cst": "30대남성, 40대남성, 20대남성", "hub": "잠실·송리단길"}, {"n": "투썸플레이스 잠실역(2)", "u": "https://web.paybooc.ai/mer/web/profile/gwcCGq1St1sDxmt9RU0J2Q", "a": "서울 송파구 올림픽로35다길 32 ,1층 (신천동,예전빌딩)", "c": "카페", "nr": 0.36, "cr": 0.51, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:53~22:53", "cg": "금요일 · 점심 (연중무휴)", "cst": "20대여성, 30대남성, 30대여성", "hub": "잠실·송리단길"}, {"n": "주식회사 아리수만찬잠실", "u": "https://web.paybooc.ai/mer/web/profile/bdIGTGvgXRrPZ7fCJvGA", "a": "서울 송파구 백제고분로 2 잠실이크루즈 (잠실동)", "c": "고기구이", "nr": 0.36, "cr": 0.55, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 11:04~익일 01:10", "cg": "토요일 · 저녁 (연중무휴)", "cst": "30대남성, 30대여성, 40대남성", "hub": "잠실·송리단길"}, {"n": "투썸플레이스(주)문정역점", "u": "https://web.paybooc.ai/mer/web/profile/4aAz0GqpULLDYNe55jogg", "a": "서울 송파구 법원로 114 ,B동 1층 112~117호", "c": "카페", "nr": 0.4, "cr": 0.61, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:03~23:28", "cg": "금요일 · 저녁 (연중무휴)", "cst": "20대여성, 30대여성, 30대남성", "hub": "잠실·송리단길"}, {"n": "강남진해장 송파점", "u": "https://web.paybooc.ai/mer/web/profile/j59YfLRP57kO63xH1Wo1g", "a": "서울 송파구 송파대로28길 13 1층 101호 (가락동, 거북이빌딩)", "c": "백반/한정식", "nr": 0.13, "cr": 0.62, "kr": "미확인", "loc": false, "fr": false, "emp": true, "hrs": "영업 예상 시간 06:00~익일 05:57", "cg": "금요일 · 점심 (연중무휴)", "cst": "50대남성, 60대이상남성, 40대남성", "hub": "잠실·송리단길"}, {"n": "(주)덕인홀딩스/J레스토랑", "u": "https://web.paybooc.ai/mer/web/profile/8CaNOCW8vCSfxU8all3b5Q", "a": "서울 송파구 잠실로 180 송파관광정보센터 (신천동)", "c": "기타외국식", "nr": 0.12, "cr": 0.65, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:01~22:27", "cg": "토요일 · 오후 (연중무휴)", "cst": "60대이상여성, 30대여성, 60대이상남성", "hub": "잠실·송리단길"}, {"n": "황실짜장", "u": "https://web.paybooc.ai/mer/web/profile/ooyNVdGFCDoGDh699pcYA", "a": "서울 송파구 바람드리길 59 1층 (풍납동)", "c": "기타중식", "nr": 0.08, "cr": 0.65, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:01~익일 05:59", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 40대남성", "hub": "잠실·송리단길"}, {"n": "메가엠지씨커피대학로중앙점", "u": "https://web.paybooc.ai/mer/web/profile/upcTJvscePn8pNctP984Eg", "a": "서울 종로구 대학로 144 1층 101호 (혜화동, 중원빌딩)", "c": "카페", "nr": 0.11, "cr": 0.1, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 09:01~21:00", "cg": "금요일 · 점심 (연중무휴)", "cst": "20대여성, 20대남성, 30대남성", "hub": "종로·익선·서촌"}, {"n": "투썸플레이스 동묘앞역점", "u": "https://web.paybooc.ai/mer/web/profile/5619D8QtAO8HsHxq8d2Uw", "a": "서울 종로구 종로 335 ,1층(창신동, 원풍빌딩)", "c": "카페", "nr": 0.22, "cr": 0.2, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:03~22:59", "cg": "토요일 · 저녁 (연중무휴)", "cst": "20대여성, 60대이상여성, 50대여성", "hub": "종로·익선·서촌"}, {"n": "달콩", "u": "https://web.paybooc.ai/mer/web/profile/RXnDxGTmYkqAobTuJt1T0A", "a": "서울 종로구 종로62길 23 1층 103호 (숭인동)", "c": "백반/한정식", "nr": 0.12, "cr": 0.23, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:20~17:56", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 60대이상여성", "hub": "종로·익선·서촌"}, {"n": "부촌", "u": "https://web.paybooc.ai/mer/web/profile/3x5ATwfSkOmIcXDE2Q2MDg", "a": "서울 종로구 종로 200-12 ,1층 (종로4가)", "c": "고기구이", "nr": 0.59, "cr": 0.26, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:02~21:32", "cg": "토요일 · 저녁 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대남성", "hub": "종로·익선·서촌"}, {"n": "주식회사 토속촌삼계탕", "u": "https://web.paybooc.ai/mer/web/profile/a458IrSPa0c3hoTwgpw", "a": "서울 종로구 자하문로5길 5 1층 (체부동)", "c": "찜/탕/찌개", "nr": 0.24, "cr": 0.27, "kr": "미확인", "loc": false, "fr": true, "emp": false, "hrs": "영업 예상 시간 09:50~21:28", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 40대남성", "hub": "종로·익선·서촌"}, {"n": "KOMFORTABEL", "u": "https://web.paybooc.ai/mer/web/profile/oUKwt8lFVnjFLD6DarUY4w", "a": "서울 종로구 윤보선길 16-1 1층 (안국동)", "c": "카페", "nr": 0.28, "cr": 0.3, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:01~21:22", "cg": "토요일 · 점심 (연중무휴)", "cst": "30대여성, 20대여성, 40대여성", "hub": "종로·익선·서촌"}, {"n": "진할매원조닭집", "u": "https://web.paybooc.ai/mer/web/profile/MSZ2VjVqRIzPNxaqUKxI8w", "a": "서울 종로구 종로40가길 18 (종로5가)", "c": "기타한식", "nr": 0.25, "cr": 0.39, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:31~익일 00:38", "cg": "토요일 · 저녁 (연중무휴)", "cst": "20대여성, 60대이상남성, 50대남성", "hub": "종로·익선·서촌"}, {"n": "커피빈코리아 광화문점", "u": "https://web.paybooc.ai/mer/web/profile/cgbKZGrhaUsSfOi5TrPlw", "a": "서울 종로구 종로 14 ,1층 (서린동,한국무역보험공사빌딩)", "c": "카페", "nr": 0.32, "cr": 0.4, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:01~22:57", "cg": "금요일 · 점심 (연중무휴)", "cst": "60대이상남성, 30대여성, 20대여성", "hub": "종로·익선·서촌"}, {"n": "루미호스피탈리티 W-FOOD", "u": "https://web.paybooc.ai/mer/web/profile/8pyGfWD7vk4YD9NtElvXw", "a": "서울 종로구 우정국로2길 29 지상 3층 (관철동)", "c": "기타외국식", "nr": 0.2, "cr": 0.41, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:42~익일 00:00", "cg": "금요일 · 점심 (연중무휴)", "cst": "30대여성, 20대여성, 40대여성", "hub": "종로·익선·서촌"}, {"n": "준푸드앤컬쳐(더반상)", "u": "https://web.paybooc.ai/mer/web/profile/BWpg7szGZ31lbF0cfk0fxA", "a": "서울 종로구 인사동5길 38 지하2층 (관훈동, 관훈빌딩(아미드호텔서울))", "c": "백반/한정식", "nr": 0.19, "cr": 0.45, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:12~23:04", "cg": "화요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대여성", "hub": "종로·익선·서촌"}, {"n": "(주)미진/광화문미진", "u": "https://web.paybooc.ai/mer/web/profile/DGDdvvSXU2HEbepKnQWWDg", "a": "서울 종로구 종로 19 (종로1가,116-2호,117호종로1가 르메이에르종로타운)", "c": "국수/면/만두", "nr": 0.17, "cr": 0.46, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:36~21:03", "cg": "금요일 · 저녁 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대여성", "hub": "종로·익선·서촌"}, {"n": "프랑스 루브르 바게트", "u": "https://web.paybooc.ai/mer/web/profile/sMXYaaXRL9yVpESC8ECwA", "a": "서울 종로구 종로 33 1층 112 119 120호 (청진동)", "c": "카페", "nr": 0.34, "cr": 0.5, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:05~22:03", "cg": "금요일 · 저녁 (연중무휴)", "cst": "20대여성, 30대여성, 40대여성", "hub": "종로·익선·서촌"}, {"n": "주식회사 달그리고나무", "u": "https://web.paybooc.ai/mer/web/profile/Z6fx5tc5qMt3wabLAD1VMQ", "a": "서울 종로구 계동길 5 1층 (계동)", "c": "고기구이", "nr": 0.63, "cr": 0.52, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:00~익일 05:59", "cg": "금요일 · 오전 (연중무휴)", "cst": "50대남성, 40대남성, 60대이상남성", "hub": "종로·익선·서촌"}, {"n": "순대실록", "u": "https://web.paybooc.ai/mer/web/profile/cJFOtKcoyMfVYGxTCnQmtw", "a": "서울 종로구 동숭길 127 2층 201호 (동숭동, 우성빌딩)", "c": "찜/탕/찌개", "nr": 0.28, "cr": 0.54, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:03~23:29", "cg": "일요일 · 저녁 (연중무휴)", "cst": "30대여성, 20대여성, 50대남성", "hub": "종로·익선·서촌"}, {"n": "투썸 2.0안국", "u": "https://web.paybooc.ai/mer/web/profile/7d78nJoyHW2iY3uBtbHoA", "a": "서울 종로구 율곡로 47 1,2층", "c": "카페", "nr": 0.34, "cr": 0.6, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:00~22:24", "cg": "금요일 · 점심 (연중무휴)", "cst": "20대여성, 40대여성, 30대여성", "hub": "종로·익선·서촌"}, {"n": "관 북", "u": "https://web.paybooc.ai/mer/web/profile/rVmyOjzRCONXNsmi4ynzIA", "a": "서울 종로구 종로5길 32-5 1,2층(청진동, 삼선빌딩)", "c": "백반/한정식", "nr": 0.4, "cr": 0.68, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 09:48~21:57", "cg": "수요일 · 점심 (연중무휴)", "cst": "40대남성, 30대남성, 50대남성", "hub": "종로·익선·서촌"}, {"n": "폴바셋 광화문점", "u": "https://web.paybooc.ai/mer/web/profile/ahnq4oJUL13MBztLbwMXEQ", "a": "서울 종로구 종로1길 50 (중학동)", "c": "카페", "nr": 0.37, "cr": 0.7, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:01~21:59", "cg": "금요일 · 점심 (연중무휴)", "cst": "30대여성, 40대여성, 40대남성", "hub": "종로·익선·서촌"}, {"n": "주식회사 용가혜화", "u": "https://web.paybooc.ai/mer/web/profile/6MQ64YHYClrFzlxCSzqtQ", "a": "서울 종로구 대학로12길 13 지하1층 (동숭동, 청민빌딩)", "c": "기타중식", "nr": 0.35, "cr": 0.74, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 11:25~익일 01:14", "cg": "금요일 · 저녁 (연중무휴)", "cst": "20대여성, 20대남성, 10대여성", "hub": "종로·익선·서촌"}, {"n": "에스카페", "u": "https://web.paybooc.ai/mer/web/profile/pqgepOFn3WHmfaL6Ho8H2w", "a": "부산 해운대구 센텀남대로 35 지하2층 (우동,신세계백화점센텀시티)", "c": "카페", "nr": 0.05, "cr": 0.19, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:59~18:21", "cg": "토요일 · 오전 (연중무휴)", "cst": "50대여성, 40대여성, 30대여성", "hub": "해운대·광안리"}, {"n": "(주) 해운대암소갈비집", "u": "https://web.paybooc.ai/mer/web/profile/ICo37xDWE5GGlfWRijYsPQ", "a": "부산 해운대구 중동2로10번길 32-10 ,1층 (중동)", "c": "고기구이", "nr": 0.13, "cr": 0.28, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 11:16~22:02", "cg": "금요일 · 저녁 (연중무휴)", "cst": "30대남성, 40대남성, 30대여성", "hub": "해운대·광안리"}, {"n": "컴포즈", "u": "https://web.paybooc.ai/mer/web/profile/fVxR3uWlDiXEncWF6arg", "a": "부산 해운대구 아랫반송로21번길 28 ,1층 (반송동)", "c": "카페", "nr": 0.11, "cr": 0.37, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:53~21:31", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 50대여성", "hub": "해운대·광안리"}, {"n": "양산왕돼지국밥", "u": "https://web.paybooc.ai/mer/web/profile/ZQ0jbRvxHhOeY2Z7lwyw", "a": "부산 해운대구 재반로 70, 1층 지상 (재송동)", "c": "찜/탕/찌개", "nr": 0.04, "cr": 0.43, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:30~21:32", "cg": "일요일 · 저녁 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대남성", "hub": "해운대·광안리"}, {"n": "(주)보리에 더베이101", "u": "https://web.paybooc.ai/mer/web/profile/wQrE3LKbJX40JvojFEczzA", "a": "부산 해운대구 동백로 52 1층 2층 (우동)", "c": "백반/한정식", "nr": 0.02, "cr": 0.46, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:59~22:31", "cg": "토요일 · 저녁 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 40대남성", "hub": "해운대·광안리"}, {"n": "하가원", "u": "https://web.paybooc.ai/mer/web/profile/xy06VsMCoD96ZmND1ppHA", "a": "부산 해운대구 좌동로91번길 28 (좌동)", "c": "국수/면/만두", "nr": 0.17, "cr": 0.5, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 09:18~21:02", "cg": "일요일 · 점심 (연중무휴)", "cst": "60대이상여성, 60대이상남성, 50대여성", "hub": "해운대·광안리"}, {"n": "거대돼지국밥", "u": "https://web.paybooc.ai/mer/web/profile/8eCxCOsAbOkHe4a8tuMwLw", "a": "부산 해운대구 달맞이길 16-2 1층 (중동)", "c": "고기구이", "nr": 0.17, "cr": 0.55, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:01~20:34", "cg": "토요일 · 점심 (연중무휴)", "cst": "30대남성, 30대여성, 40대남성", "hub": "해운대·광안리"}, {"n": "더리터 반송점", "u": "https://web.paybooc.ai/mer/web/profile/klR78zQBHiGQ1hD8UmOpvg", "a": "부산 해운대구 반송로924번길 21 1층 (반송동)", "c": "카페", "nr": 0.13, "cr": 0.56, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:36~21:40", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상여성, 50대남성, 60대이상남성", "hub": "해운대·광안리"}, {"n": "가마치통닭 해운대본점", "u": "https://web.paybooc.ai/mer/web/profile/1NLH42c74BKgQzIYBx7Fg", "a": "부산 해운대구 세실로 95 1층 일부호(좌동,아소비)", "c": "치킨", "nr": 0.19, "cr": 0.58, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 11:53~익일 00:00", "cg": "토요일 · 저녁 (연중무휴)", "cst": "60대이상남성, 50대남성, 60대이상여성", "hub": "해운대·광안리"}, {"n": "해운대기와집대구탕", "u": "https://web.paybooc.ai/mer/web/profile/gdHhmeweoZd6dU3IvHOw", "a": "부산 해운대구 달맞이길50번길 4 2-3층 (중동)", "c": "해산물구이/찜", "nr": 0.02, "cr": 0.67, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:59~20:04", "cg": "일요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 50대여성", "hub": "해운대·광안리"}, {"n": "수변최고 센텀점", "u": "https://web.paybooc.ai/mer/web/profile/U14Uf50TElQlWQZiNw", "a": "부산 해운대구 센텀3로 26 203호 (우동, 센텀스퀘어)", "c": "기타한식", "nr": 0.24, "cr": 0.73, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:49~21:53", "cg": "금요일 · 점심 (연중무휴)", "cst": "30대남성, 30대여성, 40대남성", "hub": "해운대·광안리"}, {"n": "메가엠지씨커피해운대중동이마트점", "u": "https://web.paybooc.ai/mer/web/profile/IE0VbqjjyQIyEz1OcRXrtQ", "a": "부산 해운대구 좌동순환로 505 105호 일부 (중동, 센트럴메디타워)", "c": "카페", "nr": 0.18, "cr": 0.75, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:03~22:18", "cg": "금요일 · 오전 (연중무휴)", "cst": "50대여성, 50대남성, 40대여성", "hub": "해운대·광안리"}, {"n": "송원물회횟집", "u": "https://web.paybooc.ai/mer/web/profile/aR2oUBE1sV8pcbudnOLyQ", "a": "부산 해운대구 송정강변로 55-6 1층 (송정동)", "c": "횟집", "nr": 0.27, "cr": 0.78, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:48~20:00", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대여성", "hub": "해운대·광안리"}, {"n": "외식일번가", "u": "https://web.paybooc.ai/mer/web/profile/X5WcNBj0z9IaLGTFWWZmg", "a": "부산 해운대구 해운대로 425 지상 1,2층 (우동)", "c": "고기구이", "nr": 0.31, "cr": 0.83, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:38~21:18", "cg": "일요일 · 점심 (연중무휴)", "cst": "60대이상여성, 60대이상남성, 50대남성", "hub": "해운대·광안리"}, {"n": "금수복국 본점", "u": "https://web.paybooc.ai/mer/web/profile/b2YwcANaLjlG7jSC1wmpg", "a": "부산 해운대구 중동1로43번길 23 (중동)", "c": "찜/탕/찌개", "nr": 0.08, "cr": 0.86, "kr": "미확인", "loc": false, "fr": false, "emp": true, "hrs": "영업 예상 시간 06:00~익일 05:53", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대남성", "hub": "해운대·광안리"}, {"n": "0410홍콩반점", "u": "https://web.paybooc.ai/mer/web/profile/OK5KzLeHpy8Ny8YEWUPww", "a": "부산 해운대구 선수촌로 94 101호(반여동, 대륭빌딩)", "c": "기타중식", "nr": 0.46, "cr": 0.88, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:36~21:24", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대남성", "hub": "해운대·광안리"}, {"n": "식당3선 센텀1관/주식회사 엘티알", "u": "https://web.paybooc.ai/mer/web/profile/zqm6qvOLwIaYZJc45COg", "a": "부산 해운대구 해운대로 230 (재송동)", "c": "백반/한정식", "nr": 0.12, "cr": 0.91, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 11:04~21:30", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대여성", "hub": "해운대·광안리"}, {"n": "주식회사 상국이네", "u": "https://web.paybooc.ai/mer/web/profile/8msIntvFrgo0QfiAVnBcAw", "a": "부산 해운대구 구남로41번길 40-1 ,1층 (중동)", "c": "분식", "nr": 0.1, "cr": 0.92, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 09:48~익일 00:53", "cg": "토요일 · 저녁 (휴무: 수)", "cst": "40대여성, 40대남성, 30대여성", "hub": "해운대·광안리"}, {"n": "투썸플레이스 주식회사", "u": "https://web.paybooc.ai/mer/web/profile/8GNR32lPHZqnzQx68xZA", "a": "경기 성남시 분당구 분당내곡로 131 판교테크원 1층 일부호 (백현동)", "c": "카페", "nr": 0.05, "cr": 0.12, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:58~22:49", "cg": "금요일 · 오전 (연중무휴)", "cst": "30대여성, 20대여성, 30대남성", "hub": "판교·분당"}, {"n": "투썸플레이스 야탑역점", "u": "https://web.paybooc.ai/mer/web/profile/sY0BTYbUto3r2hEeboofDg", "a": "경기 성남시 분당구 성남대로916번길 5 ,2층 201호 (야탑동, 관보골든쇼핑스포츠빌딩)", "c": "카페", "nr": 0.12, "cr": 0.24, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:03~익일 01:13", "cg": "토요일 · 저녁 (연중무휴)", "cst": "20대여성, 60대이상남성, 50대여성", "hub": "판교·분당"}, {"n": "감미옥", "u": "https://web.paybooc.ai/mer/web/profile/KL3NsVwvKEsvyfrgK0yXUw", "a": "경기 성남시 분당구 탄천로 181 (야탑동)", "c": "고기구이", "nr": 0.06, "cr": 0.24, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:58~20:56", "cg": "일요일 · 점심 (휴무: 수)", "cst": "60대이상남성, 50대남성, 60대이상여성", "hub": "판교·분당"}, {"n": "유치회관", "u": "https://web.paybooc.ai/mer/web/profile/yv2DcpYvivoJi8PXMjeQg", "a": "경기 성남시 분당구 대왕판교로 140 ,1층 (금곡동)", "c": "찜/탕/찌개", "nr": 0.11, "cr": 0.34, "kr": "미확인", "loc": false, "fr": false, "emp": true, "hrs": "영업 예상 시간 06:01~익일 05:56", "cg": "토요일 · 점심 (연중무휴)", "cst": "50대남성, 40대남성, 60대이상남성", "hub": "판교·분당"}, {"n": "메가엠지씨커피 정자역점", "u": "https://web.paybooc.ai/mer/web/profile/HVzScNyCgeqyl677UR6g", "a": "경기 성남시 분당구 성남대로331번길 13 1층 110호 (정자동)", "c": "카페", "nr": 0.16, "cr": 0.36, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:12~21:49", "cg": "금요일 · 오전 (연중무휴)", "cst": "30대남성, 40대남성, 50대남성", "hub": "판교·분당"}, {"n": "청담", "u": "https://web.paybooc.ai/mer/web/profile/Gmywu75ceHtgRvAD8yohig", "a": "경기 성남시 분당구 야탑남로88번길 2 (야탑동)", "c": "백반/한정식", "nr": 0.1, "cr": 0.45, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:04~20:46", "cg": "일요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대여성", "hub": "판교·분당"}, {"n": "주식회사능라도/능라도", "u": "https://web.paybooc.ai/mer/web/profile/ynPLXiB41R4GtkORJFlfGw", "a": "경기 성남시 분당구 산운로32번길 8 1층 2층 (운중동)", "c": "고기구이", "nr": 0.16, "cr": 0.47, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:56~21:02", "cg": "일요일 · 점심 (연중무휴)", "cst": "60대이상남성, 40대남성, 50대남성", "hub": "판교·분당"}, {"n": "(주)현대그린푸드 판교점외식", "u": "https://web.paybooc.ai/mer/web/profile/arqsZ0Ivd34M5wGx9S2fw", "a": "경기 성남시 분당구 판교역로146번길 20 판교점 11층 (백현동, 현대백화점)", "c": "카페", "nr": 0.37, "cr": 0.48, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 09:29~18:21", "cg": "일요일 · 점심 (연중무휴)", "cst": "50대여성, 40대여성, 30대남성", "hub": "판교·분당"}, {"n": "분당미금역점미정국수0410", "u": "https://web.paybooc.ai/mer/web/profile/lhPVVkLKUPl3M2H9G3ElQ", "a": "경기 성남시 분당구 돌마로 68 1층 111호(구미동, 분당프라자)", "c": "국수/면/만두", "nr": 0.33, "cr": 0.54, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:06~익일 05:51", "cg": "금요일 · 점심 (연중무휴)", "cst": "60대이상여성, 50대남성, 60대이상남성", "hub": "판교·분당"}, {"n": "비에이치씨 국군수도병원점", "u": "https://web.paybooc.ai/mer/web/profile/noHEHkq5LCUgVGhrMEbvrQ", "a": "경기 성남시 분당구 새마을로177번길 81 면회복지회관 (율동)", "c": "치킨", "nr": 0.23, "cr": 0.61, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:50~17:33", "cg": "목요일 · 점심 (연중무휴)", "cst": "20대남성, 10대남성, 50대남성", "hub": "판교·분당"}, {"n": "케이헤밍웨이베이커리카페", "u": "https://web.paybooc.ai/mer/web/profile/0IHdFnNBw0lGs7EdqNBeg", "a": "경기 성남시 분당구 대왕판교로34번길 21 (금곡동)", "c": "카페", "nr": 0.41, "cr": 0.61, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:40~21:38", "cg": "일요일 · 점심 (연중무휴)", "cst": "60대이상여성, 60대이상남성, 50대여성", "hub": "판교·분당"}, {"n": "(주)올리브홀딩스", "u": "https://web.paybooc.ai/mer/web/profile/bOZwyu01TRCPfnXHfDebhA", "a": "경기 성남시 분당구 서현로210번길 1 405호 (서현동)", "c": "기타외국식", "nr": 0.01, "cr": 0.62, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:24~20:17", "cg": "수요일 · 점심 (연중무휴)", "cst": "20대여성, 20대남성, 50대남성", "hub": "판교·분당"}, {"n": "원두막한식", "u": "https://web.paybooc.ai/mer/web/profile/3IoqkDj5GNfIwxMijitOA", "a": "경기 성남시 분당구 장미로48번길 14 2층 208호 214호 (야탑동)", "c": "기타한식", "nr": 0.4, "cr": 0.63, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 09:12~20:19", "cg": "월요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대남성", "hub": "판교·분당"}, {"n": "주식회사 서울감자탕본점", "u": "https://web.paybooc.ai/mer/web/profile/X6sPX8bj6UjOL4Uj6JXHTQ", "a": "경기 성남시 분당구 내정로107번길 2 1층 (정자동, 양지프라자)", "c": "찜/탕/찌개", "nr": 0.67, "cr": 0.69, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:00~익일 05:52", "cg": "일요일 · 저녁 (연중무휴)", "cst": "60대이상남성, 50대남성, 40대남성", "hub": "판교·분당"}, {"n": "커피뜨랑슈아", "u": "https://web.paybooc.ai/mer/web/profile/r1MnwSKxsvNZFZkaChayFA", "a": "경기 성남시 분당구 미금일로154번길 6 (구미동)", "c": "고기구이", "nr": 0.19, "cr": 0.71, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:58~14:27", "cg": "수요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대여성", "hub": "판교·분당"}, {"n": "투썸 국군수도병원점", "u": "https://web.paybooc.ai/mer/web/profile/unjviD7ZkiA8B4kl0WYs5g", "a": "경기 성남시 분당구 새마을로177번길 81 (율동)", "c": "카페", "nr": 0.49, "cr": 0.73, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:06~19:59", "cg": "목요일 · 점심 (연중무휴)", "cst": "20대남성, 50대남성, 40대남성", "hub": "판교·분당"}, {"n": "메가엠지씨커피 서울역점", "u": "https://web.paybooc.ai/mer/web/profile/ELxGj9Fcnkgld1JfHeFqg", "a": "서울 용산구 한강대로 403 1층 (동자동, 근생빌딩)", "c": "카페", "nr": 0.05, "cr": 0.14, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:31~21:21", "cg": "토요일 · 오전 (연중무휴)", "cst": "20대남성, 30대남성, 50대남성", "hub": "용산·이태원·한남"}, {"n": "프레퍼스 다이어트 푸드", "u": "https://web.paybooc.ai/mer/web/profile/mm6b9XHUBd0XwMdmTTT6bA", "a": "서울 용산구 한강대로11길 13 2,3,4층(한강로3가, 용일빌딩)", "c": "기타외국식", "nr": 0.02, "cr": 0.28, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:53~익일 02:35", "cg": "월요일 · 점심 (연중무휴)", "cst": "20대여성, 20대남성, 30대남성", "hub": "용산·이태원·한남"}, {"n": "공차 용산아이파크몰점", "u": "https://web.paybooc.ai/mer/web/profile/rFqAiCc2NTOTGLYstQRxGQ", "a": "서울 용산구 한강대로23길 55 ,6층 703호 (한강로3가,용산역,서관아이파크몰)", "c": "카페", "nr": 0.08, "cr": 0.29, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:07~21:33", "cg": "토요일 · 저녁 (연중무휴)", "cst": "20대여성, 30대여성, 20대남성", "hub": "용산·이태원·한남"}, {"n": "(주)본궁 문배동육칼 본점", "u": "https://web.paybooc.ai/mer/web/profile/O28ZK80bN7Zi6Tj327wD0Q", "a": "서울 용산구 백범로90길 50 (문배동)", "c": "고기구이", "nr": 0.58, "cr": 0.31, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:02~19:24", "cg": "토요일 · 점심 (연중무휴)", "cst": "50대남성, 40대남성, 30대남성", "hub": "용산·이태원·한남"}, {"n": "동서식품-맥심플랜트(Maxim PLANT)", "u": "https://web.paybooc.ai/mer/web/profile/EC8NXYx2PYA15vVWD7VEA", "a": "서울 용산구 이태원로 250 ,1-4층 (한남동)", "c": "카페", "nr": 0.35, "cr": 0.43, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:00~20:30", "cg": "토요일 · 오후 (연중무휴)", "cst": "20대여성, 30대여성, 30대남성", "hub": "용산·이태원·한남"}, {"n": "제주식당", "u": "https://web.paybooc.ai/mer/web/profile/cvGbNefFQoQyXFZbKXAxig", "a": "서울 용산구 대사관로 48 (한남동)", "c": "백반/한정식", "nr": 0.22, "cr": 0.44, "kr": "미확인", "loc": false, "fr": false, "emp": true, "hrs": "영업 예상 시간 08:00~익일 00:14", "cg": "토요일 · 점심 (연중무휴)", "cst": "30대여성, 40대남성, 60대이상여성", "hub": "용산·이태원·한남"}, {"n": "프로스트/주식회사 디스트릭트", "u": "https://web.paybooc.ai/mer/web/profile/JFH7r8swb46q5W2X3QmMmw", "a": "서울 용산구 이태원로27가길 26 ,1층(이태원동,해밀튼호텔 별관)", "c": "기타외국식", "nr": 0.38, "cr": 0.55, "kr": "미확인", "loc": false, "fr": true, "emp": false, "hrs": "영업 예상 시간 06:05~익일 05:53", "cg": "토요일 · 심야 (연중무휴)", "cst": "30대남성, 20대남성, 30대여성", "hub": "용산·이태원·한남"}, {"n": "주식회사 대한푸드 오준이네감자탕 신용산지점", "u": "https://web.paybooc.ai/mer/web/profile/xBFkAZcPg2OPnaFGTlUCg", "a": "서울 용산구 한강대로 120 1층 (한강로2가)", "c": "찜/탕/찌개", "nr": 0.47, "cr": 0.56, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:02~익일 05:57", "cg": "토요일 · 저녁 (연중무휴)", "cst": "20대남성, 30대남성, 20대여성", "hub": "용산·이태원·한남"}, {"n": "이디야IBK고객센터점", "u": "https://web.paybooc.ai/mer/web/profile/PvrALxvEicIg1v9OZeOA", "a": "서울 용산구 한남대로 72 외1필지지상 1층 707-18 (한남동)", "c": "카페", "nr": 0.95, "cr": 0.57, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:30~21:33", "cg": "금요일 · 오전 (연중무휴)", "cst": "50대여성, 40대여성, 30대남성", "hub": "용산·이태원·한남"}, {"n": "라밥 이태원", "u": "https://web.paybooc.ai/mer/web/profile/RSB99NhHiv3dhuhvEAjw", "a": "서울 용산구 이태원로 208 제임스클럽 1층 6,7호 (한남동)", "c": "고기구이", "nr": 0.92, "cr": 0.61, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:03~익일 05:57", "cg": "금요일 · 점심 (연중무휴)", "cst": "30대남성, 40대남성, 20대남성", "hub": "용산·이태원·한남"}, {"n": "(주)앤트러사이트커피", "u": "https://web.paybooc.ai/mer/web/profile/gsB3ksVQX0P6K3pC4C3PA", "a": "서울 용산구 이태원로 240 ,3,4,5층 (한남동)", "c": "카페", "nr": 1, "cr": 0.72, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:11~21:28", "cg": "토요일 · 점심 (연중무휴)", "cst": "20대여성, 30대여성, 30대남성", "hub": "용산·이태원·한남"}, {"n": "(주)에스와이에스홀딩스", "u": "https://web.paybooc.ai/mer/web/profile/w8NIq3jZX7I2UqTreWy7Vg", "a": "서울 용산구 청파로 74 (한강로3가)", "c": "기타한식", "nr": 0.38, "cr": 0.76, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:52~익일 05:35", "cg": "금요일 · 오후 (연중무휴)", "cst": "40대남성, 30대남성, 50대남성", "hub": "용산·이태원·한남"}, {"n": "KKD 서울역점", "u": "https://web.paybooc.ai/mer/web/profile/ikRmxDdp5eEV1j6wkWF3aQ", "a": "서울 용산구 청파로 378 서울역 2층 (동자동, 한국철도공사)", "c": "기타외국식", "nr": 0.53, "cr": 0.83, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:05~익일 05:49", "cg": "금요일 · 오전 (연중무휴)", "cst": "20대여성, 30대여성, 20대남성", "hub": "용산·이태원·한남"}, {"n": "투썸 용산아이파크몰점", "u": "https://web.paybooc.ai/mer/web/profile/hcWduHWvsVLD0BWKRJZw", "a": "서울 용산구 한강대로23길 55 6층 (한강로3가)", "c": "카페", "nr": 1.02, "cr": 0.86, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:28~21:45", "cg": "토요일 · 오후 (연중무휴)", "cst": "20대여성, 20대남성, 30대여성", "hub": "용산·이태원·한남"}, {"n": "효가옥", "u": "https://web.paybooc.ai/mer/web/profile/Ku6dAoicGcTPHmMZu8pG7w", "a": "서울 용산구 효창원로 177-15 1층 (효창동)", "c": "백반/한정식", "nr": 0.55, "cr": 0.87, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:00~익일 05:55", "cg": "금요일 · 오후 (연중무휴)", "cst": "60대이상남성, 40대남성, 30대남성", "hub": "용산·이태원·한남"}, {"n": "남영돈", "u": "https://web.paybooc.ai/mer/web/profile/fYKCVMj2b9fSCqu7tc8CGw", "a": "서울 용산구 한강대로80길 17 (남영동)", "c": "고기구이", "nr": 1.11, "cr": 0.92, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 11:58~22:29", "cg": "토요일 · 저녁 (연중무휴)", "cst": "30대남성, 20대남성, 30대여성", "hub": "용산·이태원·한남"}, {"n": "컴포즈커피 삼성전기드림프라자점", "u": "https://web.paybooc.ai/mer/web/profile/2LupqcoZVQUGrPsQULPGuQ", "a": "경기 수원시 영통구 매영로 150 삼성전기 36동 1층(매탄동)", "c": "카페", "nr": 0.28, "cr": 0.16, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:32~16:48", "cg": "수요일 · 오전 (휴무: 토,일)", "cst": "40대남성, 50대남성, 30대남성", "hub": "수원 인계·광교"}, {"n": "동산참숯갈비", "u": "https://web.paybooc.ai/mer/web/profile/7tnoxMLHg8fipEbyrJ6Q", "a": "경기 수원시 영통구 영통로 305 (매탄동)", "c": "고기구이", "nr": 0.48, "cr": 0.28, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 11:10~21:46", "cg": "토요일 · 저녁 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 40대남성", "hub": "수원 인계·광교"}, {"n": "할리스커피 아주대병원점", "u": "https://web.paybooc.ai/mer/web/profile/xrkmBVUx7oSTOTdISb2NA", "a": "경기 수원시 영통구 월드컵로 164 (원천동,아주대학병원)", "c": "카페", "nr": 0.49, "cr": 0.31, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:00~20:52", "cg": "수요일 · 오전 (연중무휴)", "cst": "50대여성, 40대여성, 60대이상여성", "hub": "수원 인계·광교"}, {"n": "coffeenie", "u": "https://web.paybooc.ai/mer/web/profile/rzL0VYJG9PgBFvhJ1n1VRg", "a": "경기 수원시 영통구 영통로241번길 12-39 6층 606호 (신동)", "c": "카페", "nr": 0.67, "cr": 0.47, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:29~18:17", "cg": "목요일 · 점심 (휴무: 토,일)", "cst": "40대남성, 30대남성, 40대여성", "hub": "수원 인계·광교"}, {"n": "서울24시감자탕해장국", "u": "https://web.paybooc.ai/mer/web/profile/pcBMuO17DWwMdWO6Fk4o9w", "a": "경기 수원시 영통구 덕영대로 1485 1층 (망포동)", "c": "찜/탕/찌개", "nr": 2.13, "cr": 0.5, "kr": "미확인", "loc": false, "fr": false, "emp": true, "hrs": "영업 예상 시간 06:03~익일 04:43", "cg": "일요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 40대남성", "hub": "수원 인계·광교"}, {"n": "우판등심수원점", "u": "https://web.paybooc.ai/mer/web/profile/YHkGnYqn9SobrVJFe26Q", "a": "경기 수원시 영통구 권선로908번길 10 (신동)", "c": "고기구이", "nr": 0.55, "cr": 0.57, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 11:25~21:38", "cg": "금요일 · 저녁 (연중무휴)", "cst": "40대남성, 30대남성, 60대이상남성", "hub": "수원 인계·광교"}, {"n": "메가엠지씨커피 망포역점", "u": "https://web.paybooc.ai/mer/web/profile/vRagCHIV2TRDF5Ea7sOF5g", "a": "경기 수원시 영통구 덕영대로 1547 ,1층 (영통동)", "c": "카페", "nr": 0.85, "cr": 0.63, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:01~22:43", "cg": "토요일 · 점심 (연중무휴)", "cst": "30대남성, 40대남성, 50대남성", "hub": "수원 인계·광교"}, {"n": "본죽&비빔밥 아주대병원점", "u": "https://web.paybooc.ai/mer/web/profile/rPUUU5LN3cB9sQpw9huKQ", "a": "경기 수원시 영통구 월드컵로 164 웰빙센터지 1층 일부호 (원천동, 아주대학병원)", "c": "백반/한정식", "nr": 1.1, "cr": 0.68, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:30~18:22", "cg": "월요일 · 점심 (휴무: 일)", "cst": "60대이상남성, 60대이상여성, 50대남성", "hub": "수원 인계·광교"}, {"n": "더치앤빈", "u": "https://web.paybooc.ai/mer/web/profile/O9gA3j0C9SNlWhlMy7iJWA", "a": "경기 수원시 영통구 인계로 260, 110호 (매탄동,우영프라자)", "c": "치킨", "nr": 1.13, "cr": 0.71, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:20~23:05", "cg": "금요일 · 점심 (연중무휴)", "cst": "30대남성, 50대남성, 40대남성", "hub": "수원 인계·광교"}, {"n": "빽다방빵연구소수원영통점", "u": "https://web.paybooc.ai/mer/web/profile/dUBcJp0SC5GMxQzbcxE4w", "a": "경기 수원시 영통구 중부대로447번길 9 102호,103호(원천동)", "c": "카페", "nr": 1.08, "cr": 0.79, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:01~22:33", "cg": "일요일 · 저녁 (연중무휴)", "cst": "30대남성, 50대여성, 50대남성", "hub": "수원 인계·광교"}, {"n": "보영만두", "u": "https://web.paybooc.ai/mer/web/profile/aMpDgBAwdKq6iPRsu2x3xg", "a": "경기 수원시 영통구 청명남로28번길 2 105호(영통동, 아이텐텐빌딩)", "c": "국수/면/만두", "nr": 2.45, "cr": 0.83, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:03~익일 00:11", "cg": "금요일 · 저녁 (연중무휴)", "cst": "40대남성, 50대남성, 40대여성", "hub": "수원 인계·광교"}, {"n": "신라갈비", "u": "https://web.paybooc.ai/mer/web/profile/kOztGS9XjKOdGSAvzaXIQ", "a": "경기 수원시 영통구 동수원로 538 (원천동)", "c": "고기구이", "nr": 0.67, "cr": 0.85, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 09:49~21:28", "cg": "금요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대남성", "hub": "수원 인계·광교"}, {"n": "라우드", "u": "https://web.paybooc.ai/mer/web/profile/RysOz0FSBeCBWPDi3lHSDQ", "a": "경기 수원시 영통구 광교산로 154-42 1층 제3복지관 감성코어 (이의동, 경기대학교)", "c": "기타한식", "nr": 1.52, "cr": 0.9, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:27~14:51", "cg": "화요일 · 점심 (휴무: 일)", "cst": "20대남성, 20대여성, 50대여성", "hub": "수원 인계·광교"}, {"n": "제주스 수원판타지움점", "u": "https://web.paybooc.ai/mer/web/profile/03NeRZWOj651YUlud7TBA", "a": "경기 수원시 영통구 덕영대로 1566 1층 (영통동)", "c": "기타외국식", "nr": 5.35, "cr": 0.9, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:02~21:28", "cg": "일요일 · 저녁 (연중무휴)", "cst": "40대남성, 40대여성, 30대여성", "hub": "수원 인계·광교"}, {"n": "드립앤더치 R4점", "u": "https://web.paybooc.ai/mer/web/profile/NN6It5KJsrj0ywE4kxsosg", "a": "경기 수원시 영통구 삼성로 129 D5동 B1층 일부 (매탄동, 삼성전자)", "c": "카페", "nr": 1.21, "cr": 0.94, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:30~18:49", "cg": "월요일 · 오전 (휴무: 토,일)", "cst": "40대남성, 30대남성, 40대여성", "hub": "수원 인계·광교"}, {"n": "노대감감자탕", "u": "https://web.paybooc.ai/mer/web/profile/0qkigjySVNiGk5WZRuw", "a": "경기 수원시 영통구 산남로 2 (매탄동)", "c": "찜/탕/찌개", "nr": 2.33, "cr": 1, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:05~익일 05:58", "cg": "토요일 · 저녁 (연중무휴)", "cst": "50대남성, 40대남성, 60대이상남성", "hub": "수원 인계·광교"}, {"n": "파스쿠찌대전카이스트점", "u": "https://web.paybooc.ai/mer/web/profile/aDGZwTPBD1PCI66u9fMg", "a": "대전광역시 유성구 대학로 291 한국과학기술원(B-20) 전시전자공학및전산학분야동 내 정보전자공학동 1층(구성동)", "c": "카페", "nr": 0.18, "cr": 0.12, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:00~22:47", "cg": "화요일 · 점심 (연중무휴)", "cst": "20대남성, 20대여성, 30대남성", "hub": "대전 둔산·유성"}, {"n": "천하", "u": "https://web.paybooc.ai/mer/web/profile/jFysI6StjBdRJjkcpcbT0g", "a": "대전 유성구 엑스포로 244-9 (원촌동)", "c": "고기구이", "nr": 0.37, "cr": 0.21, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:07~22:05", "cg": "수요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대남성", "hub": "대전 둔산·유성"}, {"n": "온어스/(주)와이컴퍼니", "u": "https://web.paybooc.ai/mer/web/profile/xF1l8DSU6kQUhnMRNEgZ6A", "a": "대전 유성구 자운로 90 면회소동 2층 (자운동)", "c": "카페", "nr": 0.22, "cr": 0.25, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:03~20:55", "cg": "화요일 · 점심 (연중무휴)", "cst": "20대남성, 50대남성, 30대남성", "hub": "대전 둔산·유성"}, {"n": "태평소국밥", "u": "https://web.paybooc.ai/mer/web/profile/zfs2u0BA3Xo6g92iOkbQ7Q", "a": "대전 유성구 온천동로65번길 50 1층 (봉명동)", "c": "찜/탕/찌개", "nr": 0.09, "cr": 0.3, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:02~익일 05:58", "cg": "금요일 · 저녁 (연중무휴)", "cst": "30대남성, 40대남성, 20대남성", "hub": "대전 둔산·유성"}, {"n": "그라찌에 (카이스트점)", "u": "https://web.paybooc.ai/mer/web/profile/B8qSyw2skFwDsDF7DIFBg", "a": "대전 유성구 대학로 291 한국과학기술원(B-45) KI빌딩동 지상1층(구성동)", "c": "카페", "nr": 0.48, "cr": 0.37, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:02~19:37", "cg": "목요일 · 점심 (연중무휴)", "cst": "20대남성, 20대여성, 30대남성", "hub": "대전 둔산·유성"}, {"n": "별리달리 카이스트", "u": "https://web.paybooc.ai/mer/web/profile/x02220fNg81BvqWZNzly6A", "a": "대전 유성구 대학로 291 학생회관및식당 지상 1층 C-5 (구성동, 한국과학기술원)", "c": "백반/한정식", "nr": 0.49, "cr": 0.38, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:13~19:27", "cg": "화요일 · 점심 (휴무: 일)", "cst": "20대남성, 10대남성, 20대여성", "hub": "대전 둔산·유성"}, {"n": "서원골유황오리", "u": "https://web.paybooc.ai/mer/web/profile/1OX3okdfgeKVc939Z8CAPQ", "a": "대전 유성구 엑스포로269번길 8 ,1층 (원촌동)", "c": "고기구이", "nr": 0.44, "cr": 0.42, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:58~21:58", "cg": "금요일 · 점심 (연중무휴)", "cst": "30대남성, 50대남성, 40대남성", "hub": "대전 둔산·유성"}, {"n": "제순식당앤인생설렁탕앤역전우동0410 대전카이스트점", "u": "https://web.paybooc.ai/mer/web/profile/uQeXgQrshu9dWR6u6k0w", "a": "대전 유성구 대학로 291 C-37동 2층 (구성동, 한국과학기술원)", "c": "국수/면/만두", "nr": 0.23, "cr": 0.43, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:19~19:27", "cg": "월요일 · 점심 (휴무: 토,일)", "cst": "20대남성, 30대남성, 20대여성", "hub": "대전 둔산·유성"}, {"n": "메가엠지씨커피 유성구청점", "u": "https://web.paybooc.ai/mer/web/profile/6yMrr5aV3OLTB9Ju6Z3Pg", "a": "대전 유성구 어은로48번길 12 (어은동)", "c": "카페", "nr": 0.76, "cr": 0.5, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:57~22:49", "cg": "토요일 · 점심 (연중무휴)", "cst": "20대남성, 20대여성, 30대남성", "hub": "대전 둔산·유성"}, {"n": "(주)아이비한신에스메카카페테리아", "u": "https://web.paybooc.ai/mer/web/profile/226uYNVY9OHl2ZMMYzdCrg", "a": "대전 유성구 테크노3로 65 ,203호 (관평동)", "c": "기타한식", "nr": 1.17, "cr": 0.51, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:13~18:19", "cg": "월요일 · 점심 (휴무: 토,일)", "cst": "40대남성, 50대남성, 30대남성", "hub": "대전 둔산·유성"}, {"n": "대전통닭", "u": "https://web.paybooc.ai/mer/web/profile/InZZqb0R30zj4Zegoe8Q", "a": "대전광역시 유성구 문화원로 53-1 1층", "c": "치킨", "nr": 1.79, "cr": 0.55, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 16:49~익일 00:39", "cg": "금요일 · 저녁 (휴무: 월)", "cst": "40대남성, 30대남성, 50대남성", "hub": "대전 둔산·유성"}, {"n": "주식회사일당", "u": "https://web.paybooc.ai/mer/web/profile/P3X7MsR4QpHEdu9SAoSe8A", "a": "대전 유성구 계룡로59번길 36 (봉명동)1층", "c": "찜/탕/찌개", "nr": 0.39, "cr": 0.6, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:01~익일 05:51", "cg": "일요일 · 저녁 (연중무휴)", "cst": "50대남성, 60대이상남성, 40대남성", "hub": "대전 둔산·유성"}, {"n": "쥬스킹", "u": "https://web.paybooc.ai/mer/web/profile/ylPswlvzjeNkOgAh7P9Ldg", "a": "대전 유성구 대학로 291 학생회관 및 식당 지상 1층 (구성동, 한국과학기술원)", "c": "카페", "nr": 1.56, "cr": 0.62, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 09:31~19:42", "cg": "월요일 · 점심 (휴무: 토,일)", "cst": "20대남성, 10대남성, 20대여성", "hub": "대전 둔산·유성"}, {"n": "복수한우", "u": "https://web.paybooc.ai/mer/web/profile/VFlinmfuI7As2wRcPLMg", "a": "대전 유성구 대정남로 26 (대정동)", "c": "고기구이", "nr": 0.95, "cr": 0.63, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 09:00~21:27", "cg": "금요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대남성", "hub": "대전 둔산·유성"}, {"n": "카페잇 카이스트점", "u": "https://web.paybooc.ai/mer/web/profile/wucj8Bfz9Ot33IuLJsXZw", "a": "대전 유성구 대학로 291 ,1층 인터내셔날센터 (구성동,한국과학기술원)", "c": "카페", "nr": 2, "cr": 0.75, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 08:16~18:26", "cg": "수요일 · 점심 (휴무: 토,일)", "cst": "20대남성, 20대여성, 30대남성", "hub": "대전 둔산·유성"}, {"n": "(주)순남시래기", "u": "https://web.paybooc.ai/mer/web/profile/oQJ9MKJJ8nG4y9idSoM3w", "a": "대전 유성구 유성대로1184번길 11-19 1층 (신성동)", "c": "백반/한정식", "nr": 2.15, "cr": 0.76, "kr": "미확인", "loc": true, "fr": true, "emp": false, "hrs": "영업 예상 시간 10:26~20:46", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 60대이상여성", "hub": "대전 둔산·유성"}, {"n": "제주당 베이커리카페", "u": "https://web.paybooc.ai/mer/web/profile/mpeXvFYSUVvljyw48mTw", "a": "제주 제주시 애월읍 월각로 927 ", "c": "카페", "nr": 0.08, "cr": 0.08, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:01~19:55", "cg": "일요일 · 점심 (연중무휴)", "cst": "50대여성, 40대여성, 60대이상여성", "hub": "제주·연동·애월"}, {"n": "늘봄흑돼지", "u": "https://web.paybooc.ai/mer/web/profile/aiUJpq5OpdTkI0EqksI5g", "a": "제주 제주시 한라대학로 12 (노형동)", "c": "고기구이", "nr": 0.11, "cr": 0.1, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:33~22:46", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대남성", "hub": "제주·연동·애월"}, {"n": "델문도", "u": "https://web.paybooc.ai/mer/web/profile/V2CXuvmALObQkDnIdzHDsw", "a": "제주 제주시 조천읍 조함해안로 519-10 ,1층", "c": "백반/한정식", "nr": 0.03, "cr": 0.13, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:11~23:33", "cg": "토요일 · 점심 (연중무휴)", "cst": "50대여성, 40대여성, 50대남성", "hub": "제주·연동·애월"}, {"n": "은희네해장국노형점", "u": "https://web.paybooc.ai/mer/web/profile/5SKBVvaDrjMl9krv29Fxg", "a": "제주 제주시 원노형로 40 (노형동)", "c": "찜/탕/찌개", "nr": 0.33, "cr": 0.14, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:00~익일 05:59", "cg": "금요일 · 오전 (연중무휴)", "cst": "50대남성, 40대남성, 30대남성", "hub": "제주·연동·애월"}, {"n": "엔제리너스 제주공항T/O", "u": "https://web.paybooc.ai/mer/web/profile/elzbCnYTa0FZaXqJUFcMg", "a": "제주 제주시 공항로 2 제주공항 2층 여객청사(용담이동)", "c": "카페", "nr": 0.09, "cr": 0.15, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:01~21:16", "cg": "일요일 · 오전 (연중무휴)", "cst": "50대남성, 40대남성, 30대여성", "hub": "제주·연동·애월"}, {"n": "숙성도제주본점", "u": "https://web.paybooc.ai/mer/web/profile/SIzctWL81pTpm8AhL9tXg", "a": "제주 제주시 제원길 30 2,3층 (연동)", "c": "고기구이", "nr": 0.25, "cr": 0.19, "kr": "미확인", "loc": false, "fr": true, "emp": false, "hrs": "영업 예상 시간 12:01~22:01", "cg": "토요일 · 저녁 (연중무휴)", "cst": "30대남성, 30대여성, 40대남성", "hub": "제주·연동·애월"}, {"n": "쉐프스키스", "u": "https://web.paybooc.ai/mer/web/profile/Dgo40ckhx9I4b694qgLUbg", "a": "제주 제주시 제주대학로 102 지층 1학생생활관1호관식당 (아라일동, 제주대학교)", "c": "기타한식", "nr": 0.11, "cr": 0.2, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 07:30~19:00", "cg": "월요일 · 점심 (연중무휴)", "cst": "20대남성, 20대여성, 10대남성", "hub": "제주·연동·애월"}, {"n": "폴바셋제주공항국내선점", "u": "https://web.paybooc.ai/mer/web/profile/fCR3xLY5bngsa8VpSVeKw", "a": "제주 제주시 공항로 2 3층 여객청사 (용담이동, 제주국제공항)", "c": "카페", "nr": 0.1, "cr": 0.23, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:00~21:17", "cg": "토요일 · 오전 (연중무휴)", "cst": "30대여성, 40대여성, 40대남성", "hub": "제주·연동·애월"}, {"n": "국수나무제주공항점", "u": "https://web.paybooc.ai/mer/web/profile/eul7R0Cy8LRZkT8mD6GQ", "a": "제주 제주시 공항로 2 (용담이동)", "c": "국수/면/만두", "nr": 0.06, "cr": 0.24, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:00~익일 05:59", "cg": "일요일 · 오전 (연중무휴)", "cst": "50대남성, 40대남성, 60대이상남성", "hub": "제주·연동·애월"}, {"n": "풀입채진고복식당제주공항점", "u": "https://web.paybooc.ai/mer/web/profile/c23FVnzQsAaCCbBpanaKA", "a": "제주 제주시 공항로 2 4층 (용담이동)", "c": "백반/한정식", "nr": 0.06, "cr": 0.25, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:26~20:20", "cg": "금요일 · 저녁 (연중무휴)", "cst": "50대남성, 60대이상남성, 50대여성", "hub": "제주·연동·애월"}, {"n": "대춘해장국", "u": "https://web.paybooc.ai/mer/web/profile/FdgaudZ0ft2tu6RgquAPA", "a": "제주 제주시 연북로 398 ,1층 (도남동,영성빌라)", "c": "찜/탕/찌개", "nr": 0.49, "cr": 0.28, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:01~14:53", "cg": "일요일 · 점심 (휴무: 월)", "cst": "50대남성, 40대남성, 30대남성", "hub": "제주·연동·애월"}, {"n": "도두해녀의집", "u": "https://web.paybooc.ai/mer/web/profile/Iv5p6MxTBuxtyfHZy1eubw", "a": "제주 제주시 도두항길 16 (도두일동)", "c": "횟집", "nr": 0.32, "cr": 0.28, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:10~19:56", "cg": "토요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 40대남성", "hub": "제주·연동·애월"}, {"n": "제주늘봄", "u": "https://web.paybooc.ai/mer/web/profile/crQQ84CxnJedLUpXnKKlAg", "a": "제주 제주시 고사마루길 6 (노형동)", "c": "고기구이", "nr": 0.31, "cr": 0.29, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:31~21:47", "cg": "금요일 · 저녁 (연중무휴)", "cst": "60대이상남성, 60대이상여성, 50대남성", "hub": "제주·연동·애월"}, {"n": "케이에프씨제주아라점", "u": "https://web.paybooc.ai/mer/web/profile/bDUMJJWtCLUxgUJcLXERA", "a": "제주 제주시 중앙로 523 1층 (아라일동)", "c": "치킨", "nr": 0.28, "cr": 0.29, "kr": "미확인", "loc": true, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:06~22:43", "cg": "일요일 · 저녁 (연중무휴)", "cst": "20대남성, 30대남성, 40대여성", "hub": "제주·연동·애월"}, {"n": "빽다방베이커리 제주사수점", "u": "https://web.paybooc.ai/mer/web/profile/ArJjaswDTk4LxPPigup8A", "a": "제주 제주시 서해안로 291-5 ,1-2층 (도두이동)", "c": "카페", "nr": 0.18, "cr": 0.31, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 10:00~20:36", "cg": "일요일 · 점심 (연중무휴)", "cst": "50대여성, 50대남성, 60대이상여성", "hub": "제주·연동·애월"}, {"n": "주식회사 일품순두부", "u": "https://web.paybooc.ai/mer/web/profile/RDwpS5ZP5G26haxCXWZaiw", "a": "제주 제주시 도령로 64 ,1층(연동)", "c": "해산물구이/찜", "nr": 0.22, "cr": 0.32, "kr": "미확인", "loc": false, "fr": false, "emp": false, "hrs": "영업 예상 시간 06:00~익일 05:54", "cg": "금요일 · 점심 (연중무휴)", "cst": "60대이상남성, 50대남성, 60대이상여성", "hub": "제주·연동·애월"}];
+  const PCT = String.fromCharCode(37);
+
+  let currentHub = "전체";
+  let currentTheme = "all";
+  let currentQuery = "";
+
+  const hubs = ["전체"];
+  MERCHANTS.forEach(function (m) {
+    if (hubs.indexOf(m.hub) === -1) hubs.push(m.hub);
+  });
+
+  const hubContainer = document.getElementById("hub-filters");
+  hubs.forEach(function (h) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "filter-btn" + (h === "전체" ? " active" : "");
+    btn.textContent = h;
+    btn.addEventListener("click", function () {
+      currentHub = h;
+      Array.from(hubContainer.querySelectorAll(".filter-btn")).forEach(function (b) {
+        b.classList.toggle("active", b.textContent === h);
+      });
+      renderAll();
+    });
+    hubContainer.appendChild(btn);
+  });
+
+  const themeBtns = document.querySelectorAll("#theme-filters .filter-btn");
+  themeBtns.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      currentTheme = btn.getAttribute("data-theme") || "all";
+      themeBtns.forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      renderAll();
+    });
+  });
+
+  const qInput = document.getElementById("query-input");
+  const qBtn = document.getElementById("query-btn");
+  function triggerSearch() {
+    currentQuery = (qInput.value || "").trim();
+    renderAll();
+  }
+  qBtn.addEventListener("click", triggerSearch);
+  qInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") triggerSearch();
+  });
+
+  document.querySelectorAll(".preset-chip").forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      qInput.value = chip.getAttribute("data-q") || "";
+      currentHub = "전체";
+      Array.from(hubContainer.querySelectorAll(".filter-btn")).forEach(function (b) {
+        b.classList.toggle("active", b.textContent === "전체");
+      });
+      triggerSearch();
+    });
+  });
+
+  function filterMerchants() {
+    return MERCHANTS.filter(function (m) {
+      if (currentHub !== "전체" && m.hub !== currentHub) return false;
+      if (currentTheme === "local" && !m.loc) return false;
+      if (currentTheme === "dinner" && !m.emp) return false;
+      if (currentTheme === "foreign" && !m.fr) return false;
+      if (currentTheme === "cafe" && m.c.indexOf("카페") === -1 && m.c.indexOf("커피") === -1 && m.c.indexOf("제과") === -1) return false;
+      if (currentTheme === "meat" && m.c.indexOf("고기") === -1 && m.c.indexOf("한식") === -1 && m.c.indexOf("구이") === -1 && m.c.indexOf("탕") === -1) return false;
+      if (currentQuery) {
+        const tokens = currentQuery.split(/\s+/);
+        const hay = (m.n + " " + m.a + " " + m.c + " " + m.hub + " " + m.cst).toLowerCase();
+        for (let i = 0; i < tokens.length; i++) {
+          if (hay.indexOf(tokens[i].toLowerCase()) === -1) return false;
+        }
+      }
+      return true;
+    });
+  }
+
+  function setSpotlight(m) {
+    if (!m) return;
+    document.getElementById("spot-name").textContent = "[" + m.hub + "] " + m.n + " (" + m.c + ")";
+    document.getElementById("spot-meta").textContent =
+      "전국 매출 상위 " + m.nr + PCT + " · 지역 매출 상위 " + m.cr + PCT + " | " + m.hrs + " | 주요 고객: " + m.cst;
+    const link = document.getElementById("spot-link");
+    link.href = m.u;
+  }
+
+  document.getElementById("btn-random-pick").addEventListener("click", function () {
+    const list = filterMerchants();
+    const pool = list.length > 0 ? list : MERCHANTS;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    setSpotlight(pick);
+  });
+
+  const canvas = document.getElementById("radar-canvas");
+  let updateRadarBars = function () {};
+  try {
+    const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    renderer.setSize(760, 420, false);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, 760 / 420, 0.1, 100);
+    camera.position.set(0, 7.2, 12.5);
+    camera.lookAt(0, 0.6, 0);
+
+    scene.add(new THREE.AmbientLight(0xdbeafe, 0.9));
+    const dirLight = new THREE.DirectionalLight(0xebb96c, 1.4);
+    dirLight.position.set(6, 12, 8);
+    scene.add(dirLight);
+
+    const gridHelper = new THREE.GridHelper(12, 12, 0x54d6c6, 0x182534);
+    scene.add(gridHelper);
+
+    const barGroup = new THREE.Group();
+    scene.add(barGroup);
+
+    updateRadarBars = function (list) {
+      while (barGroup.children.length > 0) {
+        barGroup.remove(barGroup.children[0]);
+      }
+      const subset = list.slice(0, 36);
+      const cols = 6;
+      subset.forEach(function (m, idx) {
+        const r = Math.floor(idx / cols);
+        const c = idx % cols;
+        const score = Math.max(0.4, Math.min(4.2, 4.2 - Math.log10(Math.max(0.01, m.nr) * 100) * 1.35));
+        const geo = new THREE.CylinderGeometry(0.24, 0.32, score, 16);
+        const colHex = m.c.indexOf("카페") !== -1 ? 0x54d6c6 : (m.emp ? 0x6be39b : 0xebb96c);
+        const mat = new THREE.MeshStandardMaterial({
+          color: colHex,
+          emissive: colHex,
+          emissiveIntensity: 0.28,
+          roughness: 0.25,
+          metalness: 0.5
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set((c - 2.5) * 1.55, score / 2, (r - 2.5) * 1.35);
+        barGroup.add(mesh);
+      });
+      renderer.render(scene, camera);
+    };
+
+    let angle = 0;
+    function animate() {
+      angle += 0.004;
+      barGroup.rotation.y = Math.sin(angle) * 0.35;
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+  } catch (e) {
+    // Fallback
+  }
+
+  function renderAll() {
+    const list = filterMerchants();
+    document.getElementById("radar-count-badge").textContent = "조건 일치 매장 " + list.length + "곳";
+    if (list.length > 0) {
+      setSpotlight(list[0]);
+    }
+    updateRadarBars(list);
+
+    const cardsEl = document.getElementById("cards-container");
+    cardsEl.innerHTML = "";
+    list.slice(0, 24).forEach(function (m) {
+      const card = document.createElement("article");
+      card.className = "merchant-card";
+
+      const badges = [];
+      if (m.loc) badges.push('<span class="tag-badge">동네 맛집</span>');
+      if (m.emp) badges.push('<span class="tag-badge">회식 적합</span>');
+      if (m.fr) badges.push('<span class="tag-badge">외국인 방문</span>');
+
+      card.innerHTML =
+        '<div class="card-top">' +
+          '<h3 class="card-title">' + m.n + '</h3>' +
+          '<span class="card-cat">' + m.c + '</span>' +
+        '</div>' +
+        '<div class="rank-strip">' +
+          '<span class="rank-pill">전국 매출 상위 ' + m.nr + PCT + '</span>' +
+          '<span class="rank-pill">지역 매출 상위 ' + m.cr + PCT + '</span>' +
+        '</div>' +
+        (badges.length ? '<div class="badge-strip">' + badges.join("") + '</div>' : '') +
+        '<div class="card-info">' +
+          '<div>📍 ' + m.a + '</div>' +
+          '<div>🕒 ' + m.hrs + '</div>' +
+          '<div>👥 주요 고객: ' + m.cst + ' | 혼잡: ' + m.cg + '</div>' +
+        '</div>' +
+        '<a class="card-cta" href="' + m.u + '" target="_blank" rel="noopener">eat.pl 상세 페이지에서 메뉴·혜택 확인 →</a>';
+      cardsEl.appendChild(card);
+    });
+
+    const tbody = document.getElementById("table-body");
+    tbody.innerHTML = "";
+    list.slice(0, 60).forEach(function (m) {
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td><strong>' + m.n + '</strong></td>' +
+        '<td><a class="tbl-link" href="' + m.u + '" target="_blank" rel="noopener">eat.pl 상세</a></td>' +
+        '<td>' + m.a + '</td>' +
+        '<td>' + m.c + '</td>' +
+        '<td>전국 매출 상위 ' + m.nr + PCT + '</td>' +
+        '<td>지역 매출 상위 ' + m.cr + PCT + '</td>' +
+        '<td>' + m.kr + '</td>' +
+        '<td>' + (m.loc ? "예" : "아니오") + '</td>' +
+        '<td>' + (m.fr ? "예" : "아니오") + '</td>' +
+        '<td>' + (m.emp ? "예" : "아니오") + '</td>' +
+        '<td>' + m.hrs + '</td>' +
+        '<td>' + m.cg + '</td>' +
+        '<td>' + m.cst + '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
